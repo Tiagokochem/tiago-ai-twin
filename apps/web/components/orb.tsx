@@ -66,7 +66,7 @@ export function Orb({ state = "idle", level = 0, size = 280, className }: OrbPro
           style={{
             background:
               "conic-gradient(from 0deg, #7c5cff, #22d3ee, #a78bfa, #f472b6, #7c5cff, #38bdf8, #7c5cff)",
-            filter: "blur(28px) saturate(1.2)",
+            filter: `blur(${Math.max(3, size * 0.1)}px) saturate(1.2)`,
           }}
           animate={reduced ? undefined : { rotate: 360 }}
           transition={{ duration: SPIN[state], repeat: Infinity, ease: "linear" }}
@@ -76,12 +76,13 @@ export function Orb({ state = "idle", level = 0, size = 280, className }: OrbPro
           style={{
             background:
               "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), transparent 35%), radial-gradient(circle at 70% 75%, rgba(34,211,238,0.45), transparent 40%)",
-            filter: "blur(12px)",
+            filter: `blur(${Math.max(2, size * 0.045)}px)`,
           }}
           animate={reduced ? undefined : { rotate: -360 }}
           transition={{ duration: SPIN[state] * 1.6, repeat: Infinity, ease: "linear" }}
         />
-        <div className="absolute inset-0 rounded-full shadow-[inset_0_0_60px_rgba(5,6,10,0.65),inset_0_2px_1px_rgba(255,255,255,0.25)]" />
+        <div className="absolute inset-0 rounded-full"
+          style={{ boxShadow: `inset 0 0 ${size * 0.21}px rgba(5,6,10,0.65), inset 0 2px 1px rgba(255,255,255,0.25)` }} />
       </motion.div>
     </div>
   );

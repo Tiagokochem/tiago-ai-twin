@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
 
+    # Voice (OpenAI speech-to-text and text-to-speech)
+    stt_model: str = "gpt-4o-mini-transcribe"
+    tts_model: str = "gpt-4o-mini-tts"
+    tts_voice: str = "ash"
+    max_audio_bytes: int = 8 * 1024 * 1024
+    max_tts_chars: int = 3_000
+
     # Optional Langfuse tracing (cloud or self-hosted)
     langfuse_public_key: str | None = None
     langfuse_secret_key: SecretStr | None = None

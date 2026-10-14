@@ -49,10 +49,22 @@
   "engineering": {
     "title": "Construído como um sistema de IA de produção",
     "items": [
-      { "title": "RAG medido", "body": "Golden set bilíngue com 50 perguntas; hit@k, MRR e fidelidade avaliada por LLM rodando no CI." },
-      { "title": "Resiliente", "body": "OpenAI como principal e fallback automático para DeepSeek; cai para busca textual se os embeddings falharem." },
-      { "title": "Observável", "body": "Latência, tokens e custo registrados por nó do grafo, com tracing opcional no Langfuse." },
-      { "title": "Seguro", "body": "Guarda contra prompt injection, rate limit, orçamento por sessão e chaves só no backend." }
+      {
+        "title": "RAG medido",
+        "body": "Golden set bilíngue com 50 perguntas; hit@k, MRR e fidelidade avaliada por LLM rodando no CI."
+      },
+      {
+        "title": "Resiliente",
+        "body": "OpenAI como principal e fallback automático para DeepSeek; cai para busca textual se os embeddings falharem."
+      },
+      {
+        "title": "Observável",
+        "body": "Latência, tokens e custo registrados por nó do grafo, com tracing opcional no Langfuse."
+      },
+      {
+        "title": "Seguro",
+        "body": "Guarda contra prompt injection, rate limit, orçamento por sessão e chaves só no backend."
+      }
     ]
   },
   "footer": {
@@ -118,7 +130,10 @@
       "denied": "Permissão de microfone negada.",
       "mute": "Silenciar voz",
       "unmute": "Ler respostas em voz alta",
-      "exit": "Voltar ao chat"
+      "exit": "Voltar ao chat",
+      "unavailable": "A voz está indisponível no momento.",
+      "you": "Você disse",
+      "noSpeech": "Não entendi o áudio. Tente de novo."
     },
     "jobFit": {
       "open": "Aderência à vaga",
@@ -136,7 +151,18 @@
       "strengths": "Pontos fortes",
       "close": "Fechar",
       "again": "Analisar outra vaga",
-      "talk": "Conversar com o Tiago sobre a vaga"
+      "talk": "Conversar com o Tiago sobre a vaga",
+      "gaps": "Pontos a verificar",
+      "tooShort": "Cole uma descrição de vaga um pouco mais completa.",
+      "unavailable": "Análise indisponível no momento. Tente de novo em instantes.",
+      "sources": "Fontes",
+      "searches": "Buscas do agente",
+      "discussPrompt": "Sobre a vaga de {role}: quais das suas experiências são mais relevantes e como você lidaria com as lacunas?",
+      "steps": [
+        "Extraindo os requisitos",
+        "Buscando evidências para cada requisito",
+        "Avaliando a aderência"
+      ]
     },
     "whatsapp": {
       "title": "Continuar no WhatsApp",

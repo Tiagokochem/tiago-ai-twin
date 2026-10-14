@@ -5,6 +5,7 @@ from langgraph.types import Checkpointer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from twin.agent.graph import AgentDeps, build_graph
+from twin.agent.job_fit import JobFitService
 from twin.channels.notify import LogNotifier, Notifier
 from twin.chat.service import ChatLimits, ChatService
 from twin.config import Settings
@@ -14,6 +15,7 @@ from twin.persona import Persona, load_persona
 from twin.rag.embeddings import Embedder, OpenAIEmbedder
 from twin.rag.retriever import HybridRetriever, Retriever
 from twin.security.rate_limit import RateLimiter
+from twin.voice.speech import Speech, build_speech
 
 
 @dataclass
@@ -24,6 +26,8 @@ class Container:
     retriever: Retriever
     chat: ChatService
     rate_limiter: RateLimiter
+    job_fit: JobFitService
+    speech: Speech | None
     extras: dict[str, Any]
 
 
@@ -46,6 +50,7 @@ def build_container(
     retriever: Retriever | None = None,
     notifier: Notifier | None = None,
     callbacks: list[Any] | None = None,
+    speech: Speech | None = None,
 ) -> Container:
     persona = load_persona(settings.persona_path, settings.whatsapp_owner_number)
     gateway = gateway or LLMGateway(build_providers(settings), settings.llm_timeout_seconds)
@@ -66,5 +71,7 @@ def build_container(
         retriever=retriever,
         chat=chat,
         rate_limiter=RateLimiter(settings.rate_limit_per_minute, settings.rate_limit_per_day),
+        job_fit=JobFitService(gateway, retriever, persona),
+        speech=speech or build_speech(settings),
         extras={},
     )

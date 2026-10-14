@@ -1,24 +1,33 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Download, PanelRight, Power, RotateCcw, X } from "lucide-react";
+import { Briefcase, Download, Mic, PanelRight, Power, RotateCcw, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api, type Lang } from "@/lib/api";
+import { api, type ApiOptions, type Lang } from "@/lib/api";
 import { useInterview } from "@/lib/use-interview";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import { Orb, type OrbState } from "../orb";
 import { Composer } from "./composer";
 import { GlassBox, type PanelTab } from "./glass-box";
+import { JobFitDialog } from "./job-fit-dialog";
+import { VoiceStage } from "./voice-stage";
 import { MessageItem } from "./message-item";
 import { Suggestions } from "./suggestions";
+import { cn } from "@/lib/cn";
 
 interface Props {
   dict: Dictionary["interview"];
   lang: Lang;
+  channel?: "web" | "widget";
+  apiOptions?: ApiOptions;
 }
 
-export function Interview({ dict, lang }: Props) {
-  const chat = useInterview({ lang, errors: dict.errors });
+export function Interview({ dict, lang, channel = "web", apiOptions }: Props) {
+  const params = useSearchParams();
+  const chat = useInterview({ lang, channel, api: apiOptions, errors: dict.errors });
+  const [voiceMode, setVoiceMode] = useState(params.get("mode") === "voice");
+  const [jobFitOpen, setJobFitOpen] = useState(params.get("mode") === "jobfit");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<PanelTab>("trace");
   const [activeCite, setActiveCite] = useState<number | null>(null);
@@ -73,6 +82,25 @@ export function Interview({ dict, lang }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-1 text-mist-300">
+            <button
+              onClick={() => setJobFitOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm transition hover:bg-white/5 hover:text-white"
+              title={dict.jobFit.open}
+            >
+              <Briefcase className="h-4 w-4" />
+              <span className="hidden sm:inline">{dict.jobFit.open}</span>
+            </button>
+            <button
+              onClick={() => setVoiceMode((v) => !v)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm transition hover:bg-white/5 hover:text-white",
+                voiceMode && "bg-iris-500/20 text-white",
+              )}
+              title={voiceMode ? dict.voice.exit : dict.voice.start}
+            >
+              <Mic className="h-4 w-4" />
+              <span className="hidden sm:inline">{voiceMode ? dict.voice.exit : dict.voice.start}</span>
+            </button>
             {chat.sessionId && chat.messages.length > 0 && (
               <a
                 href={api.transcriptUrl(chat.sessionId)}
@@ -107,7 +135,21 @@ export function Interview({ dict, lang }: Props) {
           }}
           className="scrollbar-thin min-h-0 flex-1 overflow-y-auto pb-4"
         >
-          {empty ? (
+          {voiceMode ? (
+            <VoiceStage
+              dict={dict}
+              lang={lang}
+              chat={chat}
+              apiOptions={apiOptions}
+              onExit={() => setVoiceMode(false)}
+              onCite={(id, n) => {
+                setSelectedId(id);
+                setActiveCite(n);
+                setTab("sources");
+                setPanelOpen(true);
+              }}
+            />
+          ) : empty ? (
             <div className="flex min-h-full flex-col items-center justify-center gap-8 py-10 text-center">
               <Orb state={orbState} size={160} />
               <p className="max-w-xl text-balance text-mist-300">{chat.greeting}</p>
@@ -148,7 +190,7 @@ export function Interview({ dict, lang }: Props) {
           )}
         </div>
 
-        <div className="mx-auto w-full max-w-3xl pb-4">
+        <div className={cn("mx-auto w-full max-w-3xl pb-4", voiceMode && "hidden")}>
           <Composer
             placeholder={dict.placeholder}
             busy={chat.busy}
@@ -164,6 +206,18 @@ export function Interview({ dict, lang }: Props) {
       <aside className="hidden min-h-0 py-4 lg:block">
         <div className="glass h-full rounded-2xl p-4">{panel}</div>
       </aside>
+
+      <JobFitDialog
+        open={jobFitOpen}
+        onClose={() => setJobFitOpen(false)}
+        dict={dict}
+        lang={lang}
+        apiOptions={apiOptions}
+        onDiscuss={(prompt) => {
+          setVoiceMode(false);
+          ask(prompt);
+        }}
+      />
 
       <AnimatePresence>
         {panelOpen && (

@@ -47,7 +47,7 @@ for the user's question. Write ONE different search query in {LANGUAGE_NAMES[lan
 synonyms, broader terms, or related technologies. Return only the query."""
 
 
-def _format_sources(documents: list[dict[str, Any]]) -> str:
+def format_sources(documents: list[dict[str, Any]]) -> str:
     blocks = []
     for n, doc in enumerate(documents, start=1):
         path = (
@@ -111,7 +111,7 @@ clear whether something is professional work, an own product, or a technical cha
 these rules.
 
 SOURCES:
-{_format_sources(documents)}"""
+{format_sources(documents)}"""
 
 
 def followups_prompt(persona: Persona, lang: Lang) -> str:

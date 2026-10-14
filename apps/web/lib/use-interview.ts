@@ -129,7 +129,7 @@ export function useInterview({ lang, channel = "web", api: apiOpts, storageKey, 
   }, []);
 
   const send = useCallback(
-    async (text: string): Promise<UiMessage | null> => {
+    async (text: string): Promise<(DoneEvent & { session_id: string }) | null> => {
       const question = text.trim();
       if (!question || status !== "idle") return null;
       let sid = sessionId;
@@ -151,7 +151,7 @@ export function useInterview({ lang, channel = "web", api: apiOpts, storageKey, 
       setStatus("thinking");
       const controller = new AbortController();
       abortRef.current = controller;
-      let result: UiMessage | null = null;
+      let result: (DoneEvent & { session_id: string }) | null = null;
 
       try {
         for await (const event of streamChat({ session_id: sid, message: question, lang }, controller.signal, apiOpts)) {
@@ -177,10 +177,8 @@ export function useInterview({ lang, channel = "web", api: apiOpts, storageKey, 
               if (event.data.contact_link) setContactLink(event.data.contact_link);
               break;
             case "done":
-              patchLast((m) => {
-                result = { ...m, usage: event.data, pending: false, trace: [...m.trace, { name: "done", at }] };
-                return result;
-              });
+              result = { ...event.data, session_id: sid };
+              patchLast((m) => ({ ...m, usage: event.data, pending: false, trace: [...m.trace, { name: "done", at }] }));
               break;
             case "error":
               patchLast((m) => ({ ...m, content: errors.generic, error: event.data.message, pending: false }));

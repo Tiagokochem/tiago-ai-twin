@@ -49,10 +49,22 @@
   "engineering": {
     "title": "Built like a production AI system",
     "items": [
-      { "title": "Measured RAG", "body": "50-question bilingual golden set; hit@k, MRR and LLM-judged faithfulness run in CI." },
-      { "title": "Resilient", "body": "OpenAI primary with automatic DeepSeek fallback; degrades to full-text search if embeddings fail." },
-      { "title": "Observable", "body": "Latency, tokens and cost recorded per graph node, plus optional Langfuse tracing." },
-      { "title": "Safe", "body": "Prompt-injection guard, rate limits, per-session budgets, keys only on the backend." }
+      {
+        "title": "Measured RAG",
+        "body": "50-question bilingual golden set; hit@k, MRR and LLM-judged faithfulness run in CI."
+      },
+      {
+        "title": "Resilient",
+        "body": "OpenAI primary with automatic DeepSeek fallback; degrades to full-text search if embeddings fail."
+      },
+      {
+        "title": "Observable",
+        "body": "Latency, tokens and cost recorded per graph node, plus optional Langfuse tracing."
+      },
+      {
+        "title": "Safe",
+        "body": "Prompt-injection guard, rate limits, per-session budgets, keys only on the backend."
+      }
     ]
   },
   "footer": {
@@ -118,7 +130,10 @@
       "denied": "Microphone permission denied.",
       "mute": "Mute voice",
       "unmute": "Read answers aloud",
-      "exit": "Back to chat"
+      "exit": "Back to chat",
+      "unavailable": "Voice is unavailable right now.",
+      "you": "You said",
+      "noSpeech": "I couldn't understand the audio. Please try again."
     },
     "jobFit": {
       "open": "Job fit",
@@ -136,7 +151,18 @@
       "strengths": "Strengths",
       "close": "Close",
       "again": "Analyze another role",
-      "talk": "Discuss this role with Tiago"
+      "talk": "Discuss this role with Tiago",
+      "gaps": "Things to verify",
+      "tooShort": "Paste a slightly more complete job description.",
+      "unavailable": "Analysis unavailable right now. Try again shortly.",
+      "sources": "Sources",
+      "searches": "Agent searches",
+      "discussPrompt": "About the {role} role: which of your experiences are most relevant, and how would you handle the gaps?",
+      "steps": [
+        "Extracting the requirements",
+        "Searching evidence for each requirement",
+        "Assessing the fit"
+      ]
     },
     "whatsapp": {
       "title": "Continue on WhatsApp",

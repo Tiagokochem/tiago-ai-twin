@@ -103,6 +103,19 @@ class ChatService:
             raise SessionNotFoundError(str(session_id))
         return session
 
+    async def get_assistant_message(self, session_id: uuid.UUID, message_id: int) -> ChatMessage:
+        async with self._sessionmaker() as db:
+            message = await db.scalar(
+                select(ChatMessage).where(
+                    ChatMessage.id == message_id,
+                    ChatMessage.session_id == session_id,
+                    ChatMessage.role == "assistant",
+                )
+            )
+        if message is None:
+            raise SessionNotFoundError(f"{session_id}/{message_id}")
+        return message
+
     async def find_active_session(self, channel: Channel, external_id: str) -> ChatSession | None:
         async with self._sessionmaker() as db:
             return await db.scalar(

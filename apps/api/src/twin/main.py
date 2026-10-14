@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from twin import __version__
-from twin.api import admin, chat, health
+from twin.api import admin, chat, health, job_fit, voice
 from twin.config import Settings, get_settings
 from twin.container import Container, build_container
 from twin.db.session import get_engine, get_sessionmaker
@@ -52,6 +52,8 @@ def create_app(container: Container | None = None, settings: Settings | None = N
     )
     app.include_router(health.router)
     app.include_router(chat.router)
+    app.include_router(job_fit.router)
+    app.include_router(voice.router)
     app.include_router(admin.router)
     return app
 

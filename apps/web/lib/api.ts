@@ -99,7 +99,50 @@ export const api = {
   endSession: (id: string, opts?: ApiOptions) =>
     request<void>(`/v1/sessions/${id}/end`, { method: "POST" }, opts),
   transcriptUrl: (id: string, opts?: ApiOptions) => `${opts?.baseUrl ?? API_URL}/v1/sessions/${id}/transcript`,
+  jobFit: (description: string, lang: Lang, opts?: ApiOptions) =>
+    request<JobFitReport>("/v1/job-fit", { method: "POST", body: JSON.stringify({ description, lang }) }, opts),
+  async transcribe(audio: Blob, lang: Lang, opts: ApiOptions = {}): Promise<string> {
+    const form = new FormData();
+    const ext = audio.type.includes("mp4") ? "mp4" : audio.type.includes("ogg") ? "ogg" : "webm";
+    form.append("audio", audio, `question.${ext}`);
+    form.append("lang", lang);
+    const response = await fetch(`${opts.baseUrl ?? API_URL}/v1/voice/transcribe`, {
+      method: "POST",
+      body: form,
+      headers: opts.headers,
+    });
+    if (!response.ok) throw new ApiError(response.status, await response.text());
+    return ((await response.json()) as { text: string }).text;
+  },
+  async speak(sessionId: string, messageId: number, opts: ApiOptions = {}): Promise<Blob> {
+    const response = await fetch(`${opts.baseUrl ?? API_URL}/v1/voice/speak`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...opts.headers },
+      body: JSON.stringify({ session_id: sessionId, message_id: messageId }),
+    });
+    if (!response.ok) throw new ApiError(response.status, await response.text());
+    return response.blob();
+  },
 };
+
+export interface JobFitRequirement {
+  requirement: string;
+  status: "met" | "partial" | "gap";
+  evidence: string;
+}
+
+export interface JobFitReport {
+  role: string;
+  score: number;
+  summary: string;
+  requirements: JobFitRequirement[];
+  strengths: string[];
+  gaps: string[];
+  citations: Citation[];
+  searches: string[];
+  latency_ms: number;
+  usage: DoneEvent;
+}
 
 /** POST /v1/chat and yield parsed server-sent events. */
 export async function* streamChat(

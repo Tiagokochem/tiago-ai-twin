@@ -40,6 +40,19 @@ class RecordingNotifier:
         self.ended.append(event)
 
 
+class FakeSpeech:
+    def __init__(self) -> None:
+        self.spoken: list[str] = []
+
+    async def transcribe(self, audio: bytes, filename: str, lang: Any) -> str:
+        return f"heard {len(audio)} bytes in {lang}"
+
+    async def synthesize(self, text: str, lang: Any) -> AsyncIterator[bytes]:
+        self.spoken.append(text)
+        yield b"ID3"
+        yield b"audio"
+
+
 def router(messages: Any) -> Analysis:
     question = str(messages[-1].content).lower()
     if "salary" in question:
@@ -77,6 +90,7 @@ async def container() -> AsyncIterator[Container]:
         gateway=LLMGateway([ScriptedProvider("broken", fail=True), provider]),
         retriever=FakeRetriever([chunk(1, "Nuvartis")]),
         notifier=RecordingNotifier(),
+        speech=FakeSpeech(),
     )
     yield built
     await engine.dispose()
@@ -190,6 +204,35 @@ async def test_metrics_aggregate_turns_and_llm_calls(
     nodes = {n["node"]: n for n in metrics["nodes"]}
     assert nodes["answer"]["errors"] == 1  # the broken primary provider
     assert any(p["fallback_successes"] > 0 for p in metrics["providers"])
+
+
+async def test_voice_transcribe_and_speak_stored_answer(
+    client: httpx.AsyncClient, container: Container
+) -> None:
+    heard = await client.post(
+        "/v1/voice/transcribe",
+        files={"audio": ("q.webm", b"12345", "audio/webm")},
+        data={"lang": "en"},
+    )
+    assert heard.json() == {"text": "heard 5 bytes in en"}
+
+    session_id = (await client.post("/v1/sessions", json={"lang": "en"})).json()["session_id"]
+    events = await ask(client, session_id, "Tell me about Nuvartis")
+    message_id = dict(events)["done"]["message_id"]
+
+    audio = await client.post(
+        "/v1/voice/speak", json={"session_id": session_id, "message_id": message_id}
+    )
+    assert audio.status_code == 200 and audio.content == b"ID3audio"
+    assert audio.headers["content-type"] == "audio/mpeg"
+    speech = container.speech
+    assert isinstance(speech, FakeSpeech)
+    assert speech.spoken == ["I built Nuvartis."]
+
+    wrong = await client.post(
+        "/v1/voice/speak", json={"session_id": session_id, "message_id": message_id - 1}
+    )
+    assert wrong.status_code == 404
 
 
 async def test_persona_endpoint(client: httpx.AsyncClient) -> None:
