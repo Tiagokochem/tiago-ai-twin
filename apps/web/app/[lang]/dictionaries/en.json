@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "title": "Tiago AI · Interview Tiago Kochem, even when he's offline",
+    "description": "An open source agentic AI digital twin. Ask about Tiago Kochem's experience and projects by chat, voice or WhatsApp. Grounded answers with sources."
+  },
+  "nav": {
+    "interview": "Start interview",
+    "github": "Source code",
+    "website": "Portfolio",
+    "language": "Português"
+  },
+  "hero": {
+    "badge": "Agentic AI · open source",
+    "title1": "Interview Tiago,",
+    "title2": "even when he's offline.",
+    "subtitle": "Tiago AI is my digital twin. It answers recruiters' questions about my experience and projects, cites every source, and hands sensitive topics over to the real me.",
+    "ctaChat": "Start the interview",
+    "ctaVoice": "Talk by voice",
+    "ctaJobFit": "Check fit for a role",
+    "ctaWhatsapp": "Prefer WhatsApp?",
+    "note": "Answers come only from my résumé, projects and website. No sources, no claim."
+  },
+  "features": [
+    {
+      "title": "Grounded answers",
+      "body": "Hybrid RAG (pgvector + full-text, fused with RRF) over a bilingual knowledge base. Every claim links to its source."
+    },
+    {
+      "title": "A real agent, not a prompt",
+      "body": "A LangGraph state machine guards, routes, retrieves, grades relevance, rewrites the query when needed and streams the answer."
+    },
+    {
+      "title": "Knows when to call me",
+      "body": "Salary, offers and scheduling go straight to my WhatsApp with a summary of the conversation. It never makes things up."
+    }
+  ],
+  "flow": {
+    "title": "What happens when you ask a question",
+    "subtitle": "Open the agent trace in the interview to watch each step, with latency, tokens and cost.",
+    "steps": {
+      "guard": "Guard",
+      "router": "Intent router",
+      "retrieve": "Hybrid retrieval",
+      "grade": "Relevance grading",
+      "answer": "Cited answer",
+      "handoff": "Handoff to Tiago"
+    }
+  },
+  "engineering": {
+    "title": "Built like a production AI system",
+    "items": [
+      { "title": "Measured RAG", "body": "50-question bilingual golden set; hit@k, MRR and LLM-judged faithfulness run in CI." },
+      { "title": "Resilient", "body": "OpenAI primary with automatic DeepSeek fallback; degrades to full-text search if embeddings fail." },
+      { "title": "Observable", "body": "Latency, tokens and cost recorded per graph node, plus optional Langfuse tracing." },
+      { "title": "Safe", "body": "Prompt-injection guard, rate limits, per-session budgets, keys only on the backend." }
+    ]
+  },
+  "footer": {
+    "built": "Built by Tiago Kochem with FastAPI, LangGraph, PostgreSQL/pgvector and Next.js.",
+    "disclaimer": "AI can make mistakes. For anything important, talk to Tiago directly."
+  },
+  "interview": {
+    "title": "Interview",
+    "placeholder": "Ask about experience, projects, stack...",
+    "send": "Send",
+    "stop": "Stop",
+    "newChat": "New interview",
+    "endChat": "End interview",
+    "ended": "Interview ended. Tiago received a summary. Thank you!",
+    "export": "Download transcript",
+    "suggested": "Suggested questions",
+    "followups": "Ask next",
+    "you": "You",
+    "assistant": "Tiago AI",
+    "panel": {
+      "sources": "Sources",
+      "trace": "Agent trace",
+      "noSources": "Citations from the selected answer show up here.",
+      "noTrace": "Ask something to see the agent's steps.",
+      "show": "Glass box",
+      "hide": "Close"
+    },
+    "status": {
+      "connecting": "Connecting",
+      "thinking": "Understanding the question",
+      "searching": "Searching the knowledge base",
+      "answering": "Writing the answer",
+      "listening": "Listening",
+      "transcribing": "Transcribing",
+      "speaking": "Speaking"
+    },
+    "trace": {
+      "total": "Total latency",
+      "calls": "LLM calls",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "providers": "Providers",
+      "fallback": "Fallback used",
+      "intent": "Intent",
+      "step": "Step"
+    },
+    "handoff": {
+      "title": "Talk to the real Tiago",
+      "body": "He has been notified and usually replies the same day.",
+      "cta": "Open WhatsApp",
+      "email": "Send e-mail"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "rateLimited": "Too many messages in a short time. Please wait a moment.",
+      "tooLong": "Message is too long."
+    },
+    "voice": {
+      "start": "Talk by voice",
+      "stop": "Stop recording",
+      "hint": "Tap the orb and speak. Tap again to send.",
+      "unsupported": "Voice is not supported in this browser.",
+      "denied": "Microphone permission denied.",
+      "mute": "Mute voice",
+      "unmute": "Read answers aloud",
+      "exit": "Back to chat"
+    },
+    "jobFit": {
+      "open": "Job fit",
+      "title": "How well does Tiago fit this role?",
+      "subtitle": "Paste the job description. The agent maps each requirement to evidence from his background, and is honest about gaps.",
+      "placeholder": "Paste the job description here...",
+      "submit": "Analyze fit",
+      "analyzing": "Analyzing requirements",
+      "score": "Fit score",
+      "met": "Met",
+      "partial": "Partial",
+      "gap": "Not evidenced",
+      "evidence": "Evidence",
+      "summary": "Summary",
+      "strengths": "Strengths",
+      "close": "Close",
+      "again": "Analyze another role",
+      "talk": "Discuss this role with Tiago"
+    },
+    "whatsapp": {
+      "title": "Continue on WhatsApp",
+      "body": "Chat with Tiago AI on WhatsApp, including voice messages.",
+      "prefill": "Hi! I'm a recruiter and I'd like to know more about Tiago."
+    }
+  }
+}

@@ -43,6 +43,16 @@ services:
       timeout: 5s
       retries: 5
 
+  web:
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_WHATSAPP_BOT_NUMBER: ${WHATSAPP_BOT_NUMBER:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -57,6 +67,7 @@ services:
       - caddy_config:/config
     depends_on:
       - api
+      - web
 
 volumes:
   pgdata:

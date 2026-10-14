@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "title": "Tiago AI · Entreviste o Tiago Kochem, mesmo quando ele está offline",
+    "description": "Um digital twin open source de IA agêntica. Pergunte sobre a experiência e os projetos do Tiago Kochem por chat, voz ou WhatsApp. Respostas fundamentadas, com fontes."
+  },
+  "nav": {
+    "interview": "Iniciar entrevista",
+    "github": "Código-fonte",
+    "website": "Portfólio",
+    "language": "English"
+  },
+  "hero": {
+    "badge": "IA agêntica · open source",
+    "title1": "Entreviste o Tiago,",
+    "title2": "mesmo quando ele está offline.",
+    "subtitle": "O Tiago AI é o meu digital twin. Ele responde às perguntas de recrutadores sobre a minha experiência e os meus projetos, cita cada fonte e me chama quando o assunto é sensível.",
+    "ctaChat": "Começar a entrevista",
+    "ctaVoice": "Conversar por voz",
+    "ctaJobFit": "Analisar aderência a uma vaga",
+    "ctaWhatsapp": "Prefere WhatsApp?",
+    "note": "As respostas vêm só do meu currículo, projetos e site. Sem fonte, sem afirmação."
+  },
+  "features": [
+    {
+      "title": "Respostas fundamentadas",
+      "body": "RAG híbrido (pgvector + full-text, combinados por RRF) sobre uma base bilíngue. Cada afirmação aponta para a fonte."
+    },
+    {
+      "title": "Um agente de verdade, não um prompt",
+      "body": "Uma máquina de estados em LangGraph protege, roteia, busca, avalia a relevância, reescreve a busca quando precisa e transmite a resposta."
+    },
+    {
+      "title": "Sabe quando me chamar",
+      "body": "Salário, propostas e agendamentos vão direto para o meu WhatsApp, com o resumo da conversa. Ele nunca inventa."
+    }
+  ],
+  "flow": {
+    "title": "O que acontece quando você pergunta",
+    "subtitle": "Abra o rastro do agente durante a entrevista para ver cada etapa, com latência, tokens e custo.",
+    "steps": {
+      "guard": "Guarda",
+      "router": "Roteador de intenção",
+      "retrieve": "Busca híbrida",
+      "grade": "Avaliação de relevância",
+      "answer": "Resposta com fontes",
+      "handoff": "Encaminha ao Tiago"
+    }
+  },
+  "engineering": {
+    "title": "Construído como um sistema de IA de produção",
+    "items": [
+      { "title": "RAG medido", "body": "Golden set bilíngue com 50 perguntas; hit@k, MRR e fidelidade avaliada por LLM rodando no CI." },
+      { "title": "Resiliente", "body": "OpenAI como principal e fallback automático para DeepSeek; cai para busca textual se os embeddings falharem." },
+      { "title": "Observável", "body": "Latência, tokens e custo registrados por nó do grafo, com tracing opcional no Langfuse." },
+      { "title": "Seguro", "body": "Guarda contra prompt injection, rate limit, orçamento por sessão e chaves só no backend." }
+    ]
+  },
+  "footer": {
+    "built": "Desenvolvido por Tiago Kochem com FastAPI, LangGraph, PostgreSQL/pgvector e Next.js.",
+    "disclaimer": "A IA pode errar. Para assuntos importantes, fale diretamente com o Tiago."
+  },
+  "interview": {
+    "title": "Entrevista",
+    "placeholder": "Pergunte sobre experiência, projetos, stack...",
+    "send": "Enviar",
+    "stop": "Parar",
+    "newChat": "Nova entrevista",
+    "endChat": "Encerrar entrevista",
+    "ended": "Entrevista encerrada. O Tiago recebeu um resumo. Obrigado!",
+    "export": "Baixar transcrição",
+    "suggested": "Perguntas sugeridas",
+    "followups": "Pergunte em seguida",
+    "you": "Você",
+    "assistant": "Tiago AI",
+    "panel": {
+      "sources": "Fontes",
+      "trace": "Rastro do agente",
+      "noSources": "As citações da resposta selecionada aparecem aqui.",
+      "noTrace": "Faça uma pergunta para ver as etapas do agente.",
+      "show": "Glass box",
+      "hide": "Fechar"
+    },
+    "status": {
+      "connecting": "Conectando",
+      "thinking": "Entendendo a pergunta",
+      "searching": "Buscando na base de conhecimento",
+      "answering": "Escrevendo a resposta",
+      "listening": "Ouvindo",
+      "transcribing": "Transcrevendo",
+      "speaking": "Falando"
+    },
+    "trace": {
+      "total": "Latência total",
+      "calls": "Chamadas ao LLM",
+      "tokens": "Tokens",
+      "cost": "Custo",
+      "providers": "Provedores",
+      "fallback": "Fallback usado",
+      "intent": "Intenção",
+      "step": "Etapa"
+    },
+    "handoff": {
+      "title": "Fale com o Tiago de verdade",
+      "body": "Ele já foi avisado e costuma responder no mesmo dia.",
+      "cta": "Abrir WhatsApp",
+      "email": "Enviar e-mail"
+    },
+    "errors": {
+      "generic": "Algo deu errado. Tente novamente.",
+      "rateLimited": "Muitas mensagens em pouco tempo. Aguarde um instante.",
+      "tooLong": "A mensagem é longa demais."
+    },
+    "voice": {
+      "start": "Conversar por voz",
+      "stop": "Parar gravação",
+      "hint": "Toque no orb e fale. Toque de novo para enviar.",
+      "unsupported": "Este navegador não suporta voz.",
+      "denied": "Permissão de microfone negada.",
+      "mute": "Silenciar voz",
+      "unmute": "Ler respostas em voz alta",
+      "exit": "Voltar ao chat"
+    },
+    "jobFit": {
+      "open": "Aderência à vaga",
+      "title": "O quanto o Tiago se encaixa nesta vaga?",
+      "subtitle": "Cole a descrição da vaga. O agente relaciona cada requisito a evidências do histórico dele e é honesto sobre as lacunas.",
+      "placeholder": "Cole aqui a descrição da vaga...",
+      "submit": "Analisar aderência",
+      "analyzing": "Analisando os requisitos",
+      "score": "Aderência",
+      "met": "Atende",
+      "partial": "Parcial",
+      "gap": "Sem evidência",
+      "evidence": "Evidência",
+      "summary": "Resumo",
+      "strengths": "Pontos fortes",
+      "close": "Fechar",
+      "again": "Analisar outra vaga",
+      "talk": "Conversar com o Tiago sobre a vaga"
+    },
+    "whatsapp": {
+      "title": "Continuar no WhatsApp",
+      "body": "Converse com o Tiago AI pelo WhatsApp, inclusive por áudio.",
+      "prefill": "Olá! Sou recrutador(a) e gostaria de saber mais sobre o Tiago."
+    }
+  }
+}

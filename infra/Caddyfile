@@ -9,9 +9,8 @@
 		}
 	}
 
-	# Web app (Next.js) is added in phase 4.
 	handle {
-		respond "Tiago AI Digital Twin - API at /api/health" 200
+		reverse_proxy web:3000
 	}
 
 	header {
