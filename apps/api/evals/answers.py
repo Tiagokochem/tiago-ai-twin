@@ -17,7 +17,7 @@ import statistics
 import sys
 import time
 import uuid
-from typing import Any
+from typing import Any, cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 from evals.common import fact_recall, load_golden, load_routing, write_report
 from twin.agent.graph import AgentDeps, Analysis, build_graph
 from twin.agent.prompts import default_registry
-from twin.agent.state import turn_input
+from twin.agent.state import Lang, turn_input
 from twin.config import get_settings
 from twin.container import build_embedder_or_none
 from twin.db.session import get_engine, get_sessionmaker
@@ -70,6 +70,19 @@ async def judge(
     )
 
 
+def build_eval_graph(llm: LLMGateway, persona: Persona) -> Any:
+    settings = get_settings()
+    retriever = HybridRetriever(get_sessionmaker(), build_embedder_or_none(settings))
+    return build_graph(AgentDeps(llm=llm, retriever=retriever, persona=persona), InMemorySaver())
+
+
+async def run_turn(graph: Any, question: str, lang: str) -> dict[str, Any]:
+    """Runs one fresh conversation turn and returns the final graph state."""
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    await graph.ainvoke(turn_input(question, cast(Lang, lang), "eval"), config)
+    return dict((await graph.aget_state(config)).values)
+
+
 async def eval_routing(llm: LLMGateway, persona: Persona) -> tuple[dict[str, Any], list[Any]]:
     rows = []
     for case in load_routing():
@@ -108,17 +121,13 @@ async def eval_routing(llm: LLMGateway, persona: Persona) -> tuple[dict[str, Any
 async def eval_answers(
     llm: LLMGateway, persona: Persona, limit: int | None
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    settings = get_settings()
-    retriever = HybridRetriever(get_sessionmaker(), build_embedder_or_none(settings))
-    graph = build_graph(AgentDeps(llm=llm, retriever=retriever, persona=persona), InMemorySaver())
+    graph = build_eval_graph(llm, persona)
 
     rows: list[dict[str, Any]] = []
     for case in load_golden()[:limit]:
-        config = {"configurable": {"thread_id": str(uuid.uuid4())}}
         started = time.perf_counter()
         with track_usage() as usage:
-            await graph.ainvoke(turn_input(case.question, case.lang, "eval"), config)  # type: ignore[arg-type]
-        state = (await graph.aget_state(config)).values  # type: ignore[arg-type]
+            state = await run_turn(graph, case.question, case.lang)
         latency = time.perf_counter() - started
         answer = state.get("response", "")
         documents = state.get("documents", [])

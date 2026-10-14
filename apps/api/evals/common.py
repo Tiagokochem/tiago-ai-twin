@@ -1,6 +1,9 @@
 import json
+import os
 import re
+import subprocess
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +12,7 @@ import yaml
 EVALS_DIR = Path(__file__).parent
 DATASETS = EVALS_DIR / "datasets"
 REPORTS = EVALS_DIR / "reports"
+HISTORY = REPORTS / "history.jsonl"
 
 
 @dataclass(frozen=True)
@@ -39,6 +43,11 @@ def load_golden(langs: tuple[str, ...] = ("pt", "en")) -> list[GoldenCase]:
 
 def load_routing() -> list[dict[str, Any]]:
     data = yaml.safe_load((DATASETS / "routing.yaml").read_text(encoding="utf-8"))
+    return list(data["cases"])
+
+
+def load_redteam() -> list[dict[str, Any]]:
+    data = yaml.safe_load((DATASETS / "redteam.yaml").read_text(encoding="utf-8"))
     return list(data["cases"])
 
 
@@ -79,7 +88,36 @@ def write_report(name: str, summary: dict[str, Any], rows: list[dict[str, Any]])
             lines += ["", f"## {key}", "", "| metric | value |", "|---|---|"]
             lines += [f"| {k} | {v} |" for k, v in value.items()]
     (REPORTS / f"{name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    append_history(name, summary)
     return path
+
+
+def _git_sha() -> str | None:
+    if sha := os.environ.get("GITHUB_SHA"):
+        return sha[:12]
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--short=12", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.stdout.strip() or None
+
+
+def append_history(name: str, summary: dict[str, Any]) -> None:
+    """One line per run, so metric drift can be traced to a commit and prompt version."""
+    entry = {
+        "at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "eval": name,
+        "git_sha": _git_sha(),
+        **summary,
+    }
+    with HISTORY.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
 def slug(text: str) -> str:

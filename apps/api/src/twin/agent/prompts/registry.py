@@ -27,7 +27,7 @@ def _digest(text: str, size: int) -> str:
 
 class PromptRegistry:
     """Prompts live as Jinja templates next to the code. Each template is
-    versioned by the hash of its content (plus the partials it includes), and
+    versioned by the hash of its content plus the shared partials, and
     the registry has an aggregate version that is persisted with every answer,
     so eval results and production traces can be tied to an exact prompt set."""
 

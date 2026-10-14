@@ -20,9 +20,7 @@ def upgrade() -> None:
     op.add_column("chat_messages", sa.Column("prompt_version", sa.String(16)))
     op.add_column("chat_messages", sa.Column("feedback", sa.SmallInteger))
     op.add_column("chat_messages", sa.Column("feedback_comment", sa.Text))
-    op.create_check_constraint(
-        "ck_chat_messages_feedback", "chat_messages", "feedback IN (-1, 1)"
-    )
+    op.create_check_constraint("ck_chat_messages_feedback", "chat_messages", "feedback IN (-1, 1)")
     op.add_column("llm_calls", sa.Column("prompt", sa.String(60)))
     op.add_column(
         "llm_calls",

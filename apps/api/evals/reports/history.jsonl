@@ -1,0 +1,1 @@
+{"at": "2026-10-14T22:04:36+00:00", "eval": "redteam-offline", "git_sha": "cf6ee1996317", "mode": "offline", "cases": 30, "guard_recall": 1.0, "guard_coverage": 0.6818, "false_positive_rate": 0.0, "prompt_version": "7d6dd36ac5"}

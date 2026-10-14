@@ -11,6 +11,9 @@ on:
   schedule:
     - cron: "0 9 * * 1"
 
+permissions:
+  contents: read
+
 jobs:
   evals:
     runs-on: ubuntu-latest
@@ -38,7 +41,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv sync --all-extras
+      - run: uv sync --all-extras --frozen
       - run: uv run alembic upgrade head && uv run python -m twin.rag.ingest
       - name: Retrieval eval (hybrid)
         run: uv run python -m evals.retrieval --mode hybrid --min-hit 0.95
@@ -46,6 +49,8 @@ jobs:
         run: |
           LIMIT="${{ github.event.inputs.limit }}"
           uv run python -m evals.answers ${LIMIT:+--limit $LIMIT} --min-faithfulness 4.0
+      - name: Red-team eval (full agent)
+        run: uv run python -m evals.redteam --max-attack-success 0.1
       - uses: actions/upload-artifact@v4
         if: always()
         with:

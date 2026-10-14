@@ -47,6 +47,25 @@ def test_prompt_registry_versions_and_strict_variables() -> None:
         registry.render("answer", persona=persona)
 
 
+@pytest.mark.parametrize("name", default_registry().names)
+@pytest.mark.parametrize("lang", ["pt", "en"])
+def test_every_prompt_renders(name: str, lang: str) -> None:
+    """Catches a template that references a variable no caller provides."""
+    persona = load_persona(REPO_ROOT / "persona.yaml")
+    language = "Portuguese" if lang == "pt" else "English"
+    variables = {
+        "persona": persona,
+        "lang": lang,
+        "language": language,
+        "default_lang": lang,
+        "channel": "web",
+        "mode": "job_fit",
+        "requirements": ["Python", "RAG"],
+    }
+    text = default_registry().render(name, **variables).text
+    assert text and "{{" not in text and "{%" not in text
+
+
 def test_prompt_version_changes_with_content(tmp_path) -> None:  # type: ignore[no-untyped-def]
     (tmp_path / "a.j2").write_text("hello {{ name }}")
     before = PromptRegistry(tmp_path)

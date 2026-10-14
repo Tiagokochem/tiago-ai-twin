@@ -65,15 +65,16 @@ flowchart TD
   S([question]) --> guard{guard<br/>injection regex}
   guard -->|injection| refuse
   guard --> analyze[analyze<br/>intent · language · search query]
-  analyze -->|about_tiago / job_fit| retrieve[retrieve<br/>vector + full-text, RRF]
+  analyze -->|about_tiago| retrieve[retrieve<br/>multi-query hybrid search, RRF]
+  analyze -->|job_fit| retrieve
   analyze -->|smalltalk| answer
   analyze -->|handoff| handoff
   analyze -->|off_topic / injection| refuse
+  analyze -.->|web / widget, in parallel| followups[suggest follow-ups]
   retrieve --> grade[grade<br/>keep relevant passages]
   grade -->|relevant| answer[answer<br/>streamed, cited]
   grade -->|nothing, first try| rewrite[rewrite query] --> retrieve
   grade -->|still nothing| handoff[handoff<br/>notify Tiago]
-  answer -->|web / widget| followups[suggest follow-ups]
   answer --> E([end])
   followups --> E
   handoff --> E
@@ -81,8 +82,11 @@ flowchart TD
 ```
 
 Conversation memory is a LangGraph `AsyncPostgresSaver` checkpoint per
-session. Every LLM call goes through a gateway that falls back from OpenAI
-to DeepSeek and records node, provider, model, latency, tokens and cost.
+session, trimmed to a token budget before each LLM call. Nodes are small
+factories over an explicit `AgentDeps` container, so each one is unit-tested
+in isolation. Prompts are versioned Jinja templates; every LLM call goes
+through a gateway that falls back from OpenAI to DeepSeek and records node,
+prompt version, provider, model, latency, tokens and cost.
 More detail in [docs/architecture.md](docs/architecture.md) and the
 [architecture decision records](docs/adr/).
 
@@ -91,25 +95,46 @@ More detail in [docs/architecture.md](docs/architecture.md) and the
 - **Measured RAG.** A bilingual golden set of 50 questions (25 × PT/EN) with
   expected sources and facts. CI runs a lexical retrieval eval on every push
   (no API key needed) and fails if hit@6 drops below 0.9; a scheduled
-  workflow runs the hybrid retrieval and LLM-as-judge answer evals.
+  workflow runs the hybrid retrieval and LLM-as-judge answer evals. Every
+  run appends to `evals/reports/history.jsonl` with the commit and prompt
+  version, so a regression points at the change that caused it.
+- **Versioned prompts.** Templates live in `agent/prompts/templates/` and are
+  rendered with `StrictUndefined`; each has a content hash, and the aggregate
+  version is stored on every answer and LLM call, shown in the UI trace and
+  attached to evals ([ADR 0007](docs/adr/0007-versioned-prompts.md)).
+- **Red teaming.** 30 adversarial and look-alike cases (override, prompt
+  leak, role-play, obfuscation, injection inside a job description,
+  fabrication pressure, private data, abuse). CI gates the regex guard at
+  100% recall and 0 false positives; the full-agent run also checks that no
+  prompt fragment ever leaks.
 - **Hybrid retrieval.** pgvector (HNSW, cosine) plus a weighted Postgres
   `tsvector` per language, fused with Reciprocal Rank Fusion. Degrades to
   full-text when embeddings are unavailable.
 - **Resilience.** Primary/fallback LLM providers with timeouts; streaming only
-  falls back before the first token; a friendly "unavailable" message
+  falls back before the first token; the turn runs detached from the HTTP
+  request, so a dropped connection never leaves a half-written checkpoint;
+  one turn per session at a time; a friendly "unavailable" message
   instead of errors; the widget turns into a plain WhatsApp button if the
   API is down.
 - **Observability.** `/api/v1/admin/metrics` aggregates p50/p95 latency, cost,
   intents, handoffs and per-node / per-provider errors from the database;
+  request ids and access logs without query strings; e-mails and phone
+  numbers redacted from logs; thumbs up/down feedback stored per answer;
   optional Langfuse tracing.
 - **Security.** Prompt-injection guard plus a router intent for it, sources
-  and user input marked untrusted in prompts, per-IP rate limiting, per-session
-  message and token budgets, salted IP hashes, keys only on the backend, voice
+  and user input marked untrusted in prompts, cost-weighted per-IP rate
+  limiting, a daily USD circuit breaker, per-session message and token
+  budgets, salted IP hashes, keys only on the backend, voice
   synthesis limited to stored answers, `frame-ancestors` allowlist for the
-  widget, webhook token for WhatsApp.
-- **Quality gates.** ruff, strict mypy, 57 pytest tests (unit + integration
-  against real Postgres with scripted LLM providers), ESLint and a production
-  Next.js build in CI.
+  widget, webhook token for WhatsApp, link allowlist in rendered Markdown,
+  hardened containers (`no-new-privileges`, dropped capabilities).
+- **Accessible, resilient UI.** Spec-compliant SSE parser, token batching per
+  animation frame, retry and feedback per answer, focus-trapped dialogs, ARIA
+  tabs, keyboard support and live regions.
+- **Quality gates.** ruff, strict mypy, 102 pytest tests (unit + integration
+  against real Postgres with scripted LLM providers), migration round-trip,
+  offline evals, ESLint, `tsc`, a production Next.js build, Docker image
+  builds, `pip-audit` and `npm audit` in CI; Dependabot for all ecosystems.
 
 ### Retrieval eval (lexical baseline, runs in CI)
 
@@ -128,12 +153,15 @@ by an LLM) run in the [Evals workflow](.github/workflows/evals.yml) once an
 
 ```
 apps/api/            FastAPI, LangGraph agent, RAG, voice, WhatsApp, evals, tests
-  src/twin/agent/      graph, prompts, guard, citations, job fit
+  src/twin/agent/      graph builder, nodes, routing, versioned prompts, guard, citations, job fit
   src/twin/rag/        loader, chunking, embeddings, ingestion, hybrid retriever
   src/twin/llm/        provider gateway with fallback and usage tracking
   src/twin/channels/   Evolution API client, WhatsApp channel, notifiers
-  evals/               golden set, retrieval and answer evals
+  src/twin/security/   rate limiter, daily budget breaker
+  evals/               golden, routing and red-team sets; retrieval, answer and red-team evals
 apps/web/            Next.js 16 app (landing, interview, embed) and public/widget.js
+  components/          ui/ primitives, interview/, inspector/, voice/, job-fit/
+  lib/                 API client, SSE parser, interview and voice hooks
 knowledge/{pt,en}/   Markdown sources with front matter (what the twin knows)
 persona.yaml         identity, tone, handoff topics, fixed messages
 infra/Caddyfile      reverse proxy, TLS, security headers
@@ -203,6 +231,7 @@ Add the site to `EMBED_ORIGINS` in `.env`. Options: `data-locale`
 | POST | `/api/v1/chat` | Ask a question; Server-Sent Events: `status`, `token`, `final`, `done` |
 | GET | `/api/v1/sessions/{id}` · `/transcript` | Stored conversation · Markdown transcript |
 | POST | `/api/v1/sessions/{id}/end` | Close the interview and notify the owner |
+| POST | `/api/v1/sessions/{id}/messages/{message_id}/feedback` | Thumbs up/down (`1` / `-1`) on an answer |
 | POST | `/api/v1/job-fit` | Job description → cited fit report |
 | POST | `/api/v1/voice/transcribe` | Audio → text |
 | POST | `/api/v1/voice/speak` | Stored answer → MP3 stream |

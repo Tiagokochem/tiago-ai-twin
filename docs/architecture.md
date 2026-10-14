@@ -12,33 +12,68 @@
 
 ## Request flow: one chat turn
 
-1. `POST /v1/chat` with `session_id` and `message`. The rate limiter and the
-   per-session budget (messages, tokens) are checked; the user message is stored.
-2. The LangGraph graph runs with `thread_id = session_id`, so the checkpointer
-   restores the conversation history.
+1. `POST /v1/chat` with `session_id` and `message`. The cost-weighted rate
+   limiter, the daily USD budget and the per-session budget (messages, tokens)
+   are checked; a second concurrent turn on the same session gets `409`; the
+   user message is stored.
+2. The turn runs in a detached task that feeds a queue, so a client
+   disconnect cannot interrupt a checkpoint write. The LangGraph graph runs
+   with `thread_id = session_id`, so the checkpointer restores the
+   conversation history; each node trims it to its own token budget.
 3. Nodes emit custom stream events (`status`, `token`) through
    `get_stream_writer`; the service forwards them as Server-Sent Events.
-4. After the graph finishes, the service emits `final` (intent, citations,
-   follow-ups, handoff) and persists the assistant message together with one
-   row per LLM call (node, provider, model, latency, tokens, cost, fallback, error).
-5. `done` carries the turn's latency, token count, cost and providers; the
-   UI's glass box renders it.
+4. After the graph finishes, the service emits `final` (cleaned response,
+   intent, citations, follow-ups, handoff) and persists the assistant message
+   with the prompt version, together with one row per LLM call (node, prompt,
+   provider, model, latency, tokens, cost, fallback, error). If the graph
+   failed mid-turn, the checkpoint is repaired so the next turn starts clean.
+5. `done` carries the message id, latency, token count, cost, providers and
+   prompt version; the UI's inspector renders it next to the client-side
+   timeline (time to first token, total).
 6. If a handoff happened, the notifier runs in the background (WhatsApp to the
    owner, or a log line when WhatsApp is not configured).
 
 ## Agent nodes
 
+The graph lives in `agent/builder.py`; each node is a factory in
+`agent/nodes/` that closes over an `AgentDeps` container (gateway, retriever,
+persona, prompt registry, history budgets), and the routing functions in
+`agent/routing.py` are pure. On web and widget, `followups` runs in parallel
+with retrieval and the answer.
+
 | Node | Model tier | What it does |
 |---|---|---|
 | `guard` | none | Regex check (PT/EN, accent-insensitive) for prompt injection. |
 | `analyze` | fast | Structured output: intent, language, standalone search query, handoff reason. |
-| `retrieve` | embeddings | Hybrid search filtered by language; job descriptions use a larger `top_k`. |
+| `retrieve` | embeddings | Multi-query hybrid search (rewritten query + original question) fused with RRF; for job descriptions, one search per extracted requirement. Query embeddings are LRU-cached. |
 | `grade` | fast | Keeps only passages useful for the question (skipped for job fit). |
 | `rewrite` | fast | One alternative query when nothing relevant was found. |
-| `answer` | answer | Streams a cited answer; invalid `[n]` markers are stripped; citations are extracted. |
+| `answer` | answer | Streams a cited answer; invalid `[n]` markers are removed while streaming; citations are extracted. Sources go in a separate `<sources>` message marked untrusted. |
 | `followups` | fast | Three suggested next questions (web and widget only). |
 | `handoff` | none | Fixed message with the owner's contact; marks the turn for notification. |
 | `refuse` | none | Off-topic or injection message. |
+
+## Prompts
+
+Templates in `agent/prompts/templates/*.j2` share partials (`_grounding.j2`)
+and render with `StrictUndefined`, so a missing variable fails loudly in
+tests instead of shipping an empty prompt. Each template's version is a hash
+of its source plus the shared partials; the registry version (shown as
+`prompts@…` in the UI) is stored on every message, LLM call and eval report.
+See [ADR 0007](adr/0007-versioned-prompts.md).
+
+## Evaluation
+
+| Eval | Dataset | Runs | Gate |
+|---|---|---|---|
+| Retrieval (lexical) | `golden.yaml`, 50 cases | every push | hit@6 ≥ 0.9 |
+| Red team (regex guard) | `redteam.yaml`, 30 cases | every push | recall 100%, false positives 0 |
+| Retrieval (hybrid) | `golden.yaml` | weekly / on demand | hit@6 ≥ 0.95 |
+| Routing + answers (LLM judge) | `routing.yaml`, `golden.yaml` | weekly / on demand | faithfulness ≥ 4.0 |
+| Red team (full agent) | `redteam.yaml` | weekly / on demand | attack success ≤ 10%, no prompt leak, no false positives |
+
+Each run writes a JSON + Markdown report and appends a line to
+`evals/reports/history.jsonl` with the git commit and prompt version.
 
 ## Retrieval
 
@@ -54,10 +89,14 @@
 
 ## Job fit
 
-A separate two-step agent (`JobFitService`): the fast model extracts the role
-and up to eight requirements; each requirement is searched in parallel; the
-results are interleaved round-robin (so every requirement gets evidence) and
-deduplicated; the answer model returns a structured assessment with citations.
+`JobFitService` is split into three steps reused by both the job-fit dialog
+and the chat (`job_fit` intent): `extract` (fast model, role and 3–8
+requirements, the description wrapped in `<job_description>` as untrusted
+data), `gather_evidence` (one search per requirement in parallel, interleaved
+round-robin and deduplicated; a failed search degrades instead of failing the
+report) and `analyze` (answer model, structured assessment with citations).
+The overall score is computed deterministically from the per-requirement
+verdicts, weighted by rank, rather than asked of the model.
 
 ## Voice
 
@@ -97,8 +136,10 @@ sequenceDiagram
 - `chat_sessions` — channel, language, external id (WhatsApp number), totals,
   `handoff_at`, `ended_at`, `last_activity_at`.
 - `chat_messages` — role, content, intent, citations, follow-ups, handoff
-  reason, degraded flag, latency.
-- `llm_calls` — one row per provider attempt, linked to the assistant message.
+  reason, degraded flag, latency, prompt version, feedback (±1) and comment.
+- `llm_calls` — one row per provider attempt with prompt and scope (`chat`,
+  `job_fit`, …), linked to the assistant message when there is one; also the
+  source of the daily budget breaker.
 - LangGraph checkpoint tables (created by `AsyncPostgresSaver.setup()`).
 
 ## Security notes
@@ -106,7 +147,15 @@ sequenceDiagram
 - LLM, Evolution and admin secrets live only in the API container.
 - Untrusted text (user input, sources, job descriptions) is never allowed to
   change instructions; the guard and the router both detect injection.
-- Rate limits per salted IP hash and per WhatsApp number; per-session message
-  and token budgets.
+- Rate limits per salted IP hash and per WhatsApp number, weighted by
+  endpoint cost (job fit 4, voice 2, chat 1); a daily USD circuit breaker over
+  `llm_calls` returns `503` before any provider is called; per-session
+  message and token budgets.
+- Logs carry a request id, never query strings, and redact e-mails and phone
+  numbers.
+- The UI renders Markdown with an `https:`/`mailto:` link allowlist and no
+  images; the widget only accepts `postMessage` from its own iframe origin.
+- Containers run with `no-new-privileges` and all capabilities dropped
+  (Caddy keeps `NET_BIND_SERVICE`); Caddy caps API request bodies at 10 MB.
 - The transcript endpoint is addressed by an unguessable session UUID.
 - Only `/[lang]/embed` may be framed, and only by `EMBED_ORIGINS`.
