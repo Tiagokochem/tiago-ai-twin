@@ -47,8 +47,12 @@ class SessionOut(BaseModel):
 
 
 class MessageOut(BaseModel):
+    id: int
     role: str
     content: str
+    intent: str | None
+    feedback: int | None
+    latency_ms: int | None
     citations: list[dict[str, Any]]
     followups: list[str]
     handoff_reason: str | None
@@ -126,8 +130,12 @@ async def get_session(session_id: uuid.UUID, container: ContainerDep) -> Session
         created_at=session.created_at,
         messages=[
             MessageOut(
+                id=m.id,
                 role=m.role,
                 content=m.content,
+                intent=m.intent,
+                feedback=m.feedback,
+                latency_ms=m.latency_ms,
                 citations=m.citations,
                 followups=m.followups,
                 handoff_reason=m.handoff_reason,

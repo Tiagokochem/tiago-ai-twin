@@ -90,7 +90,8 @@
       "noSources": "As citações da resposta selecionada aparecem aqui.",
       "noTrace": "Faça uma pergunta para ver as etapas do agente.",
       "show": "Glass box",
-      "hide": "Fechar"
+      "hide": "Fechar",
+      "label": "Detalhes da resposta"
     },
     "status": {
       "connecting": "Conectando",
@@ -99,7 +100,9 @@
       "answering": "Escrevendo a resposta",
       "listening": "Ouvindo",
       "transcribing": "Transcrevendo",
-      "speaking": "Falando"
+      "speaking": "Falando",
+      "online": "Online",
+      "offline": "Offline no momento"
     },
     "trace": {
       "total": "Latência total",
@@ -120,7 +123,9 @@
     "errors": {
       "generic": "Algo deu errado. Tente novamente.",
       "rateLimited": "Muitas mensagens em pouco tempo. Aguarde um instante.",
-      "tooLong": "A mensagem é longa demais."
+      "tooLong": "A mensagem é longa demais.",
+      "busy": "Ainda estou respondendo a pergunta anterior.",
+      "unavailable": "Limite de uso diário atingido. Tente amanhã ou fale com o Tiago diretamente."
     },
     "voice": {
       "start": "Conversar por voz",
@@ -168,6 +173,18 @@
       "title": "Continuar no WhatsApp",
       "body": "Converse com o Tiago AI pelo WhatsApp, inclusive por áudio.",
       "prefill": "Olá! Sou recrutador(a) e gostaria de saber mais sobre o Tiago."
+    },
+    "actions": {
+      "copy": "Copiar resposta",
+      "copied": "Copiado",
+      "retry": "Tentar de novo",
+      "helpful": "Resposta útil",
+      "notHelpful": "Resposta não ajudou",
+      "thanks": "Obrigado pelo feedback",
+      "inspect": "Ver fontes e trace",
+      "jumpLatest": "Ir para a última mensagem",
+      "firstToken": "Primeiro token",
+      "stopped": "Resposta interrompida."
     }
   }
 }

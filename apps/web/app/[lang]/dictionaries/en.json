@@ -90,7 +90,8 @@
       "noSources": "Citations from the selected answer show up here.",
       "noTrace": "Ask something to see the agent's steps.",
       "show": "Glass box",
-      "hide": "Close"
+      "hide": "Close",
+      "label": "Answer details"
     },
     "status": {
       "connecting": "Connecting",
@@ -99,7 +100,9 @@
       "answering": "Writing the answer",
       "listening": "Listening",
       "transcribing": "Transcribing",
-      "speaking": "Speaking"
+      "speaking": "Speaking",
+      "online": "Online",
+      "offline": "Offline right now"
     },
     "trace": {
       "total": "Total latency",
@@ -120,7 +123,9 @@
     "errors": {
       "generic": "Something went wrong. Please try again.",
       "rateLimited": "Too many messages in a short time. Please wait a moment.",
-      "tooLong": "Message is too long."
+      "tooLong": "Message is too long.",
+      "busy": "I'm still answering the previous question.",
+      "unavailable": "Daily usage limit reached. Try again tomorrow or contact Tiago directly."
     },
     "voice": {
       "start": "Talk by voice",
@@ -168,6 +173,18 @@
       "title": "Continue on WhatsApp",
       "body": "Chat with Tiago AI on WhatsApp, including voice messages.",
       "prefill": "Hi! I'm a recruiter and I'd like to know more about Tiago."
+    },
+    "actions": {
+      "copy": "Copy answer",
+      "copied": "Copied",
+      "retry": "Try again",
+      "helpful": "Helpful answer",
+      "notHelpful": "Not helpful",
+      "thanks": "Thanks for the feedback",
+      "inspect": "Show sources and trace",
+      "jumpLatest": "Jump to latest",
+      "firstToken": "First token",
+      "stopped": "Answer stopped."
     }
   }
 }

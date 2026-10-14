@@ -1,18 +1,20 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
-import { Briefcase, Download, Mic, PanelRight, Power, RotateCcw, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { api, type ApiOptions, type Lang } from "@/lib/api";
 import { useInterview } from "@/lib/use-interview";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import { Orb, type OrbState } from "../orb";
+import { Orb, type OrbState } from "@/components/orb";
+import { Inspector, type InspectorTab } from "@/components/inspector/inspector";
+import { JobFitDialog } from "@/components/job-fit/job-fit-dialog";
+import { VoiceStage } from "@/components/voice/voice-stage";
+import { Dialog } from "@/components/ui/dialog";
+import { LiveRegion } from "@/components/ui/primitives";
 import { Composer } from "./composer";
-import { GlassBox, type PanelTab } from "./glass-box";
-import { JobFitDialog } from "./job-fit-dialog";
-import { VoiceStage } from "./voice-stage";
+import { InterviewHeader } from "./interview-header";
 import { MessageItem } from "./message-item";
+import { MessageList } from "./message-list";
 import { Suggestions } from "./suggestions";
 import { cn } from "@/lib/cn";
 
@@ -24,52 +26,77 @@ interface Props {
   embedded?: boolean;
 }
 
+export const EMBED_CLOSE_MESSAGE = "tiago-ai:close";
+
+/** Below the lg breakpoint the inspector is a bottom sheet instead of a side panel. */
+const isCompact = () => typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
+
 export function Interview({ dict, lang, channel = "web", apiOptions, embedded = false }: Props) {
-  const params = useSearchParams();
   const chat = useInterview({ lang, channel, api: apiOptions, errors: dict.errors });
-  const [voiceMode, setVoiceMode] = useState(params.get("mode") === "voice");
-  const [jobFitOpen, setJobFitOpen] = useState(params.get("mode") === "jobfit");
+  const { send, retry, rate } = chat;
+
+  // ?mode=voice | ?mode=jobfit, also when the query changes on the same page.
+  const mode = useSearchParams().get("mode");
+  const [seenMode, setSeenMode] = useState<string | null>(null);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [jobFitOpen, setJobFitOpen] = useState(false);
+  if (mode !== seenMode) {
+    setSeenMode(mode);
+    setVoiceMode(mode === "voice");
+    setJobFitOpen(mode === "jobfit");
+  }
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [tab, setTab] = useState<PanelTab>("trace");
+  const [tab, setTab] = useState<InspectorTab>("trace");
   const [activeCite, setActiveCite] = useState<number | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const stickToBottom = useRef(true);
+  const [pin, setPin] = useState(0);
 
-  const assistantMessages = chat.messages.filter((m) => m.role === "assistant");
-  const latest = assistantMessages[assistantMessages.length - 1] ?? null;
+  const latest = useMemo(() => [...chat.messages].reverse().find((m) => m.role === "assistant") ?? null, [chat.messages]);
   const selected = useMemo(
     () => chat.messages.find((m) => m.id === selectedId) ?? latest,
     [chat.messages, selectedId, latest],
   );
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
-  }, [chat.messages]);
+  const ask = useCallback(
+    (text: string) => {
+      setSelectedId(null);
+      setActiveCite(null);
+      setTab("trace");
+      setPin((p) => p + 1);
+      void send(text);
+    },
+    [send],
+  );
 
-  const ask = (text: string) => {
-    setSelectedId(null);
+  const showCitation = useCallback((id: string, n: number) => {
+    setSelectedId(id);
+    setActiveCite(n);
+    setTab("sources");
+    setPanelOpen(isCompact());
+  }, []);
+
+  const inspect = useCallback((id: string) => {
+    setSelectedId(id);
     setActiveCite(null);
-    setTab("trace");
-    stickToBottom.current = true;
-    void chat.send(text);
-  };
+    setTab("sources");
+    setPanelOpen(isCompact());
+  }, []);
 
   const orbState: OrbState = chat.status === "idle" ? "idle" : chat.status;
-  const statusLabel = chat.status === "idle" ? dict.status.connecting : dict.status[chat.status];
+  const statusLabel = chat.busy
+    ? dict.status[chat.status as Exclude<typeof chat.status, "idle">]
+    : chat.online === false
+      ? dict.status.offline
+      : chat.online
+        ? dict.status.online
+        : dict.status.connecting;
   const followups = !chat.busy && latest?.followups.length ? latest.followups : [];
+  const lastError = latest?.error && !latest.pending ? latest.error : "";
   const empty = chat.messages.length === 0;
+  const lastContent = chat.messages[chat.messages.length - 1]?.content.length ?? 0;
 
-  const panel = (
-    <GlassBox
-      message={selected}
-      tab={tab}
-      onTab={setTab}
-      activeCite={activeCite}
-      dict={dict}
-    />
-  );
+  const panel = <Inspector message={selected} tab={tab} onTab={setTab} activeCite={activeCite} dict={dict} />;
 
   return (
     <div
@@ -78,69 +105,26 @@ export function Interview({ dict, lang, channel = "web", apiOptions, embedded = 
         embedded ? "h-dvh" : "h-[calc(100dvh-4rem)]",
       )}
     >
-      <section className="flex min-h-0 flex-col">
-        <div className="flex items-center justify-between gap-2 py-3">
-          <div className="flex items-center gap-3">
-            <Orb state={orbState} size={30} />
-            <div>
-              <p className="text-sm font-medium">{dict.assistant}</p>
-              <p className="text-xs text-mist-400">{chat.busy ? statusLabel : "online"}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-mist-300">
-            <button
-              onClick={() => setJobFitOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm transition hover:bg-white/5 hover:text-white"
-              title={dict.jobFit.open}
-            >
-              <Briefcase className="h-4 w-4" />
-              <span className="hidden sm:inline">{dict.jobFit.open}</span>
-            </button>
-            <button
-              onClick={() => setVoiceMode((v) => !v)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm transition hover:bg-white/5 hover:text-white",
-                voiceMode && "bg-iris-500/20 text-white",
-              )}
-              title={voiceMode ? dict.voice.exit : dict.voice.start}
-            >
-              <Mic className="h-4 w-4" />
-              <span className="hidden sm:inline">{voiceMode ? dict.voice.exit : dict.voice.start}</span>
-            </button>
-            {chat.sessionId && chat.messages.length > 0 && (
-              <a
-                href={api.transcriptUrl(chat.sessionId)}
-                className="rounded-lg p-2 transition hover:bg-white/5 hover:text-white"
-                title={dict.export}
-              >
-                <Download className="h-4 w-4" />
-              </a>
-            )}
-            <button onClick={chat.reset} className="rounded-lg p-2 transition hover:bg-white/5 hover:text-white" title={dict.newChat}>
-              <RotateCcw className="h-4 w-4" />
-            </button>
-            {chat.messages.length > 0 && !chat.ended && (
-              <button onClick={chat.end} className="rounded-lg p-2 transition hover:bg-white/5 hover:text-white" title={dict.endChat}>
-                <Power className="h-4 w-4" />
-              </button>
-            )}
-            <button
-              onClick={() => setPanelOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg p-2 text-sm transition hover:bg-white/5 hover:text-white lg:hidden"
-            >
-              <PanelRight className="h-4 w-4" /> {dict.panel.show}
-            </button>
-          </div>
-        </div>
+      <main className="flex min-h-0 flex-col">
+        <InterviewHeader
+          dict={dict}
+          orbState={orbState}
+          statusLabel={statusLabel}
+          online={chat.online}
+          voiceMode={voiceMode}
+          transcriptUrl={chat.sessionId && !empty ? api.transcriptUrl(chat.sessionId, apiOptions) : null}
+          canEnd={!empty && !chat.ended}
+          onJobFit={() => setJobFitOpen(true)}
+          onVoice={() => setVoiceMode((v) => !v)}
+          onReset={chat.reset}
+          onEnd={() => void chat.end()}
+          onPanel={() => setPanelOpen(true)}
+          onCloseEmbed={embedded ? () => window.parent.postMessage({ type: EMBED_CLOSE_MESSAGE }, "*") : undefined}
+        />
+        <LiveRegion>{chat.busy ? statusLabel : ""}</LiveRegion>
+        <LiveRegion assertive>{lastError}</LiveRegion>
 
-        <div
-          ref={scrollRef}
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-          }}
-          className="scrollbar-thin min-h-0 flex-1 overflow-y-auto pb-4"
-        >
+        <MessageList contentKey={`${chat.messages.length}:${lastContent}`} pinKey={pin} jumpLabel={dict.actions.jumpLatest}>
           {voiceMode ? (
             <VoiceStage
               dict={dict}
@@ -148,12 +132,7 @@ export function Interview({ dict, lang, channel = "web", apiOptions, embedded = 
               chat={chat}
               apiOptions={apiOptions}
               onExit={() => setVoiceMode(false)}
-              onCite={(id, n) => {
-                setSelectedId(id);
-                setActiveCite(n);
-                setTab("sources");
-                setPanelOpen(true);
-              }}
+              onCite={showCitation}
             />
           ) : empty ? (
             <div className="flex min-h-full flex-col items-center justify-center gap-8 py-10 text-center">
@@ -165,36 +144,42 @@ export function Interview({ dict, lang, channel = "web", apiOptions, embedded = 
             </div>
           ) : (
             <div className="mx-auto flex max-w-3xl flex-col gap-5 pt-2">
-              {chat.messages.map((m) => (
-                <MessageItem
-                  key={m.id}
-                  message={m}
-                  dict={dict}
-                  statusLabel={statusLabel}
-                  selected={m.role === "assistant" && m.id === selected?.id}
-                  activeCite={activeCite}
-                  contactLink={chat.contactLink}
-                  onSelect={() => setSelectedId(m.id)}
-                  onCite={(n) => {
-                    setActiveCite(n);
-                    setTab("sources");
-                    setPanelOpen(true);
-                  }}
-                />
-              ))}
+              <ol className="flex flex-col gap-5" aria-label={dict.title}>
+                {chat.messages.map((m) => {
+                  const isSelected = m.role === "assistant" && m.id === selected?.id;
+                  return (
+                    <MessageItem
+                      key={m.id}
+                      message={m}
+                      dict={dict}
+                      statusLabel={m.pending ? statusLabel : undefined}
+                      selected={isSelected}
+                      activeCite={isSelected ? activeCite : null}
+                      contactLink={chat.contactLink}
+                      onCite={showCitation}
+                      onInspect={inspect}
+                      onRetry={retry}
+                      onRate={rate}
+                    />
+                  );
+                })}
+              </ol>
               {followups.length > 0 && (
                 <div className="pl-10">
                   <Suggestions title={dict.followups} items={followups} onPick={ask} />
                 </div>
               )}
               {chat.ended && (
-                <p className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-center text-sm text-emerald-200">
+                <p
+                  role="status"
+                  className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-center text-sm text-emerald-200"
+                >
                   {dict.ended}
                 </p>
               )}
             </div>
           )}
-        </div>
+        </MessageList>
 
         <div className={cn("mx-auto w-full max-w-3xl pb-4", voiceMode && "hidden")}>
           <Composer
@@ -207,9 +192,9 @@ export function Interview({ dict, lang, channel = "web", apiOptions, embedded = 
             onStop={chat.stop}
           />
         </div>
-      </section>
+      </main>
 
-      <aside className="hidden min-h-0 py-4 lg:block">
+      <aside className="hidden min-h-0 py-4 lg:block" aria-label={dict.panel.label}>
         <div className="glass h-full rounded-2xl p-4">{panel}</div>
       </aside>
 
@@ -225,35 +210,18 @@ export function Interview({ dict, lang, channel = "web", apiOptions, embedded = 
         }}
       />
 
-      <AnimatePresence>
-        {panelOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setPanelOpen(false)}
-          >
-            <motion.div
-              className="glass absolute inset-x-0 bottom-0 h-[75dvh] rounded-t-3xl p-4"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setPanelOpen(false)}
-                className="absolute right-4 top-4 rounded-lg p-1.5 text-mist-300 hover:bg-white/10"
-                aria-label={dict.panel.hide}
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <div className="h-full pt-8">{panel}</div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="lg:hidden">
+        <Dialog
+          open={panelOpen}
+          onClose={() => setPanelOpen(false)}
+          title={dict.panel.label}
+          closeLabel={dict.panel.hide}
+          variant="sheet"
+          hideTitle
+        >
+          <div className="h-full pt-8">{panel}</div>
+        </Dialog>
+      </div>
     </div>
   );
 }

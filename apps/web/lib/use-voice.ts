@@ -17,6 +17,8 @@ export function useVoice() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const micNodes = useRef<AudioNode[]>([]);
+  const starting = useRef(false);
   const frameRef = useRef<number>(0);
 
   const context = useCallback(() => {
@@ -53,27 +55,43 @@ export function useVoice() {
     () => false,
   );
 
+  const releaseMic = useCallback(() => {
+    micNodes.current.forEach((node) => node.disconnect());
+    micNodes.current = [];
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  }, []);
+
   const startRecording = useCallback(async (): Promise<VoiceError | null> => {
     if (!supported) return "unsupported";
-    let stream: MediaStream;
+    // A second tap while the permission prompt is open must not open another stream.
+    if (starting.current || recorderRef.current) return null;
+    starting.current = true;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    } catch {
-      return "denied";
-    }
-    streamRef.current = stream;
-    const mimeType = MIME_TYPES.find((t) => MediaRecorder.isTypeSupported(t));
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    recorderRef.current = recorder;
-    recorder.start();
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      } catch {
+        return "denied";
+      }
+      streamRef.current = stream;
+      const mimeType = MIME_TYPES.find((t) => MediaRecorder.isTypeSupported(t));
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recorderRef.current = recorder;
+      recorder.start();
 
-    const ctx = context();
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 512;
-    ctx.createMediaStreamSource(stream).connect(analyser);
-    meter(analyser);
-    setRecording(true);
-    return null;
+      const ctx = context();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      const source = ctx.createMediaStreamSource(stream);
+      source.connect(analyser);
+      micNodes.current = [source, analyser];
+      meter(analyser);
+      setRecording(true);
+      return null;
+    } finally {
+      starting.current = false;
+    }
   }, [supported, context, meter]);
 
   const stopRecording = useCallback(async (): Promise<Blob | null> => {
@@ -85,12 +103,12 @@ export function useVoice() {
       recorder.onstop = () => resolve(new Blob(chunks, { type: recorder.mimeType || "audio/webm" }));
     });
     recorder.stop();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
     recorderRef.current = null;
+    releaseMic();
     stopMeter();
     setRecording(false);
     return done;
-  }, [stopMeter]);
+  }, [stopMeter, releaseMic]);
 
   const stopPlayback = useCallback(() => {
     const audio = audioRef.current;
@@ -118,6 +136,7 @@ export function useVoice() {
           if (settled) return;
           settled = true;
           source.disconnect();
+          analyser.disconnect();
           URL.revokeObjectURL(url);
           if (audioRef.current === audio) audioRef.current = null;
           stopMeter();
@@ -136,11 +155,15 @@ export function useVoice() {
   useEffect(
     () => () => {
       cancelAnimationFrame(frameRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      recorderRef.current = null;
+      releaseMic();
       audioRef.current?.pause();
+      audioRef.current = null;
       void ctxRef.current?.close();
+      ctxRef.current = null;
     },
-    [],
+    [releaseMic],
   );
 
   return { supported, recording, playing, level, startRecording, stopRecording, play, stopPlayback };

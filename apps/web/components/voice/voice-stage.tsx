@@ -2,23 +2,27 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { MessageSquare, Mic, Square, Volume2, VolumeX } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, type ApiOptions, type Lang } from "@/lib/api";
-import type { useInterview } from "@/lib/use-interview";
+import type { InterviewController } from "@/lib/use-interview";
 import { useVoice } from "@/lib/use-voice";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import { Orb, type OrbState } from "../orb";
-import { AnswerMarkdown } from "./markdown";
+import { Orb, type OrbState } from "@/components/orb";
+import { AnswerMarkdown } from "@/components/interview/markdown";
+import { IconButton } from "@/components/ui/icon-button";
+import { LiveRegion } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
 
 interface Props {
   dict: Dictionary["interview"];
   lang: Lang;
-  chat: ReturnType<typeof useInterview>;
+  chat: InterviewController;
   apiOptions?: ApiOptions;
   onExit: () => void;
   onCite: (messageId: string, n: number) => void;
 }
+
+const MIN_AUDIO_BYTES = 1200;
 
 export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Props) {
   const voice = useVoice();
@@ -26,6 +30,18 @@ export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Pro
   const [question, setQuestion] = useState("");
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(false);
+  // Read inside async flows, where the state captured at call time may be stale.
+  const mutedRef = useRef(muted);
+  const alive = useRef(true);
+  useEffect(() => {
+    mutedRef.current = muted;
+  }, [muted]);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   const latest = [...chat.messages].reverse().find((m) => m.role === "assistant");
   const busy = transcribing || chat.busy;
@@ -64,7 +80,7 @@ export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Pro
     }
 
     const audio = await voice.stopRecording();
-    if (!audio || audio.size < 1200) {
+    if (!audio || audio.size < MIN_AUDIO_BYTES) {
       setError(dict.voice.noSpeech);
       return;
     }
@@ -73,41 +89,52 @@ export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Pro
     try {
       text = (await api.transcribe(audio, lang, apiOptions)).trim();
     } catch (err) {
-      setError(err instanceof ApiError && err.status === 429 ? dict.errors.rateLimited : dict.voice.unavailable);
+      if (alive.current)
+        setError(err instanceof ApiError && err.status === 429 ? dict.errors.rateLimited : dict.voice.unavailable);
     } finally {
-      setTranscribing(false);
+      if (alive.current) setTranscribing(false);
     }
+    if (!alive.current) return;
     if (!text) {
       setError((current) => current || dict.voice.noSpeech);
       return;
     }
     setQuestion(text);
     const done = await chat.send(text);
-    if (!done?.message_id || muted) return;
+    if (!alive.current || !done?.message_id || mutedRef.current) return;
     try {
-      await voice.play(await api.speak(done.session_id, done.message_id, apiOptions));
+      const speech = await api.speak(done.session_id, done.message_id, apiOptions);
+      if (alive.current && !mutedRef.current) await voice.play(speech);
     } catch {
-      setError(dict.voice.unavailable);
+      if (alive.current) setError(dict.voice.unavailable);
     }
-  }, [voice, busy, dict, lang, apiOptions, chat, muted]);
+  }, [voice, busy, dict, lang, apiOptions, chat]);
 
+  // Bind the Space shortcut once and always call the latest toggle.
+  const toggleRef = useRef(toggle);
+  useEffect(() => {
+    toggleRef.current = toggle;
+  }, [toggle]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat) return;
       const target = e.target as HTMLElement;
-      if (target.closest("input, textarea, button, [contenteditable]")) return;
+      if (target.closest("input, textarea, button, a, [contenteditable], [role=dialog]")) return;
       e.preventDefault();
-      void toggle();
+      void toggleRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [toggle]);
+  }, []);
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-6 py-8 text-center">
+      <LiveRegion>{label}</LiveRegion>
       <button
+        type="button"
         onClick={() => void toggle()}
         aria-label={voice.recording ? dict.voice.stop : dict.voice.start}
+        aria-pressed={voice.recording}
         className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-glow/60"
       >
         <Orb state={orbState} level={voice.level} size={220} />
@@ -116,6 +143,7 @@ export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Pro
       <AnimatePresence mode="wait">
         <motion.p
           key={label}
+          aria-hidden
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
@@ -127,6 +155,7 @@ export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Pro
 
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={() => void toggle()}
           disabled={busy && !voice.playing}
           className={cn(
@@ -137,29 +166,32 @@ export function VoiceStage({ dict, lang, chat, apiOptions, onExit, onCite }: Pro
           {voice.recording ? <Square className="h-3.5 w-3.5 fill-current" /> : <Mic className="h-4 w-4" />}
           {voice.recording ? dict.voice.stop : dict.voice.start}
         </button>
-        <button
+        <IconButton
+          label={muted ? dict.voice.unmute : dict.voice.mute}
+          aria-pressed={muted}
+          icon={muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           onClick={() => {
             setMuted((m) => !m);
             voice.stopPlayback();
           }}
-          title={muted ? dict.voice.unmute : dict.voice.mute}
-          className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-mist-300 transition hover:bg-white/5 hover:text-white"
-        >
-          {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-        </button>
-        <button
+          className="h-10 w-10 justify-center rounded-full border border-white/10"
+        />
+        <IconButton
+          label={dict.voice.exit}
+          icon={<MessageSquare className="h-4 w-4" />}
           onClick={() => {
             voice.stopPlayback();
             onExit();
           }}
-          title={dict.voice.exit}
-          className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-mist-300 transition hover:bg-white/5 hover:text-white"
-        >
-          <MessageSquare className="h-4 w-4" />
-        </button>
+          className="h-10 w-10 justify-center rounded-full border border-white/10"
+        />
       </div>
 
-      {error && <p className="text-sm text-red-300">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-300">
+          {error}
+        </p>
+      )}
 
       {question && (
         <div className="w-full max-w-2xl space-y-3 text-left">

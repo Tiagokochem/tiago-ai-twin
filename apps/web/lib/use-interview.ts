@@ -4,10 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   api,
   ApiError,
+  type AgentStatus,
   type ApiOptions,
   type Citation,
   type DoneEvent,
+  type Feedback,
   type Lang,
+  type StoredMessage,
   streamChat,
 } from "./api";
 
@@ -18,6 +21,8 @@ export interface TraceStep {
 
 export interface UiMessage {
   id: string;
+  /** Server id of a persisted assistant answer (feedback, voice). */
+  messageId?: number;
   role: "user" | "assistant";
   content: string;
   citations: Citation[];
@@ -26,26 +31,39 @@ export interface UiMessage {
   intent: string | null;
   trace: TraceStep[];
   usage: DoneEvent | null;
+  feedback: Feedback | null;
   pending: boolean;
+  /** The question that produced this answer, used by retry. */
+  question?: string;
   error?: string;
 }
 
-export type InterviewStatus = "idle" | "thinking" | "searching" | "answering";
+export type InterviewStatus = "idle" | AgentStatus;
+
+export interface InterviewErrors {
+  generic: string;
+  rateLimited: string;
+  tooLong: string;
+  busy: string;
+  unavailable: string;
+}
 
 interface Options {
   lang: Lang;
   channel?: "web" | "widget";
   api?: ApiOptions;
   storageKey?: string;
-  errors: { generic: string; rateLimited: string; tooLong: string };
+  errors: InterviewErrors;
 }
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+export type SendResult = DoneEvent & { session_id: string };
 
-function assistantMessage(partial: Partial<UiMessage> = {}): UiMessage {
+let counter = 0;
+const uid = () => `m${Date.now().toString(36)}${(counter++).toString(36)}`;
+
+function message(partial: Partial<UiMessage> & Pick<UiMessage, "role">): UiMessage {
   return {
     id: uid(),
-    role: "assistant",
     content: "",
     citations: [],
     followups: [],
@@ -53,180 +71,287 @@ function assistantMessage(partial: Partial<UiMessage> = {}): UiMessage {
     intent: null,
     trace: [],
     usage: null,
+    feedback: null,
     pending: false,
     ...partial,
   };
 }
 
+function restore(stored: StoredMessage): UiMessage {
+  return message({
+    id: `s${stored.id}`,
+    messageId: stored.role === "assistant" ? stored.id : undefined,
+    role: stored.role,
+    content: stored.content,
+    citations: stored.citations,
+    followups: stored.followups,
+    handoff: stored.handoff_reason,
+    intent: stored.intent,
+    feedback: stored.feedback,
+    usage: stored.latency_ms != null ? { latency_ms: stored.latency_ms } : null,
+  });
+}
+
+function describe(err: unknown, errors: InterviewErrors): string {
+  if (!(err instanceof ApiError)) return errors.generic;
+  if (err.status === 429) return errors.rateLimited;
+  if (err.status === 422) return errors.tooLong;
+  if (err.status === 409) return errors.busy;
+  if (err.status === 503) return errors.unavailable;
+  return errors.generic;
+}
+
 export function useInterview({ lang, channel = "web", api: apiOpts, storageKey, errors }: Options) {
-  const key = storageKey ?? `tiago-ai:session:${lang}`;
+  const key = storageKey ?? `tiago-ai:session:${channel}:${lang}`;
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [greeting, setGreeting] = useState("");
   const [starters, setStarters] = useState<string[]>([]);
   const [contactLink, setContactLink] = useState("");
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [status, setStatus] = useState<InterviewStatus>("idle");
+  const [online, setOnline] = useState<boolean | null>(null);
   const [ended, setEnded] = useState(false);
+
   const abortRef = useRef<AbortController | null>(null);
+  const inFlight = useRef(false);
+  // Bumped on reset/unmount so a late stream cannot write into a new conversation.
+  const generation = useRef(0);
+  const sessionRef = useRef<string | null>(null);
+  const tokenBuffer = useRef<{ id: string; text: string } | null>(null);
+  const frame = useRef(0);
+  const optsRef = useRef(apiOpts);
+  const errorsRef = useRef(errors);
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    optsRef.current = apiOpts;
+    errorsRef.current = errors;
+    messagesRef.current = messages;
+  });
 
-  const startSession = useCallback(async () => {
-    const info = await api.createSession(lang, channel, apiOpts);
-    localStorage.setItem(key, info.session_id);
-    setSessionId(info.session_id);
-    setContactLink(info.contact_link);
-    setEnded(false);
-    return info.session_id;
-  }, [lang, channel, apiOpts, key]);
+  const patch = useCallback((id: string, fn: (m: UiMessage) => UiMessage) => {
+    setMessages((all) => all.map((m) => (m.id === id ? fn(m) : m)));
+  }, []);
 
-  // Load persona copy and restore a previous conversation. The session itself
+  const flushTokens = useCallback(() => {
+    cancelAnimationFrame(frame.current);
+    const pending = tokenBuffer.current;
+    tokenBuffer.current = null;
+    if (pending?.text) patch(pending.id, (m) => ({ ...m, content: m.content + pending.text }));
+  }, [patch]);
+
+  // Tokens arrive faster than the screen refreshes: batch them per frame.
+  const pushToken = useCallback(
+    (id: string, text: string) => {
+      if (tokenBuffer.current && tokenBuffer.current.id !== id) flushTokens();
+      tokenBuffer.current = { id, text: (tokenBuffer.current?.text ?? "") + text };
+      cancelAnimationFrame(frame.current);
+      frame.current = requestAnimationFrame(flushTokens);
+    },
+    [flushTokens],
+  );
+
+  const setSession = useCallback(
+    (id: string | null) => {
+      sessionRef.current = id;
+      setSessionId(id);
+      if (id) localStorage.setItem(key, id);
+      else localStorage.removeItem(key);
+    },
+    [key],
+  );
+
+  // Persona copy and restore of a previous conversation. The session itself
   // is created lazily on the first message.
   useEffect(() => {
-    let cancelled = false;
+    const gen = generation.current;
+    const opts = optsRef.current;
     (async () => {
       try {
-        const persona = await api.persona(apiOpts);
-        if (cancelled) return;
+        const persona = await api.persona(opts);
+        if (gen !== generation.current) return;
         setGreeting(persona.messages.disclaimer[lang]);
         setStarters(persona.starter_questions[lang]);
         setContactLink(persona.contact_link);
+        setOnline(true);
       } catch {
-        if (!cancelled) setMessages([assistantMessage({ content: errors.generic, error: "init" })]);
+        if (gen === generation.current) setOnline(false);
         return;
       }
       const stored = localStorage.getItem(key);
       if (!stored) return;
       try {
-        const previous = await api.getSession(stored, apiOpts);
-        if (cancelled) return;
+        const previous = await api.getSession(stored, opts);
+        // Do not clobber a conversation the user already started meanwhile.
+        if (gen !== generation.current || sessionRef.current) return;
+        sessionRef.current = stored;
         setSessionId(stored);
-        setMessages(
-          previous.messages.map((m) =>
-            assistantMessage({
-              role: m.role,
-              content: m.content,
-              citations: m.citations,
-              followups: m.followups,
-              handoff: m.handoff_reason,
-            }),
-          ),
-        );
+        setMessages(previous.messages.map(restore));
       } catch {
         localStorage.removeItem(key);
       }
     })();
     return () => {
-      cancelled = true;
+      generation.current += 1;
+      abortRef.current?.abort();
+      cancelAnimationFrame(frame.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang, key]);
 
-  const patchLast = useCallback((fn: (m: UiMessage) => UiMessage) => {
-    setMessages((all) => {
-      const copy = [...all];
-      copy[copy.length - 1] = fn(copy[copy.length - 1]);
-      return copy;
-    });
-  }, []);
-
   const send = useCallback(
-    async (text: string): Promise<(DoneEvent & { session_id: string }) | null> => {
+    async (text: string): Promise<SendResult | null> => {
       const question = text.trim();
-      if (!question || status !== "idle") return null;
-      let sid = sessionId;
-      if (!sid) {
-        try {
-          sid = await startSession();
-        } catch (err) {
-          const message = err instanceof ApiError && err.status === 429 ? errors.rateLimited : errors.generic;
-          setMessages((all) => [...all, assistantMessage({ content: message, error: message })]);
-          return null;
-        }
-      }
-      const started = performance.now();
-      setMessages((all) => [
-        ...all,
-        assistantMessage({ role: "user", content: question }),
-        assistantMessage({ pending: true, trace: [{ name: "start", at: 0 }] }),
-      ]);
+      if (!question || inFlight.current) return null;
+      inFlight.current = true;
+      const gen = generation.current;
+      const errs = errorsRef.current;
+      const opts = optsRef.current;
+      const userMsg = message({ role: "user", content: question });
+      const answer = message({ role: "assistant", pending: true, question, trace: [{ name: "start", at: 0 }] });
+      setMessages((all) => [...all, userMsg, answer]);
       setStatus("thinking");
+
+      const started = performance.now();
+      const elapsed = () => Math.round(performance.now() - started);
       const controller = new AbortController();
       abortRef.current = controller;
-      let result: (DoneEvent & { session_id: string }) | null = null;
+      let result: SendResult | null = null;
+      let firstToken = true;
 
       try {
-        for await (const event of streamChat({ session_id: sid, message: question, lang }, controller.signal, apiOpts)) {
-          const at = Math.round(performance.now() - started);
+        let sid = sessionRef.current;
+        if (!sid) {
+          const info = await api.createSession(lang, channel, opts);
+          if (gen !== generation.current) return null;
+          sid = info.session_id;
+          setSession(sid);
+          setEnded(false);
+          if (info.contact_link) setContactLink(info.contact_link);
+        }
+        for await (const event of streamChat({ session_id: sid, message: question, lang }, controller.signal, opts)) {
+          if (gen !== generation.current) break;
           switch (event.event) {
-            case "status":
-              setStatus(event.data as InterviewStatus);
-              patchLast((m) => ({ ...m, trace: [...m.trace, { name: event.data, at }] }));
+            case "status": {
+              const at = elapsed();
+              setStatus(event.data);
+              patch(answer.id, (m) => ({ ...m, trace: [...m.trace, { name: event.data, at }] }));
               break;
+            }
             case "token":
-              setStatus("answering");
-              patchLast((m) => ({ ...m, content: m.content + event.data }));
+              if (firstToken) {
+                firstToken = false;
+                const at = elapsed();
+                setStatus("answering");
+                patch(answer.id, (m) => ({ ...m, trace: [...m.trace, { name: "first_token", at }] }));
+              }
+              pushToken(answer.id, event.data);
               break;
             case "final":
-              patchLast((m) => ({
+              flushTokens();
+              patch(answer.id, (m) => ({
                 ...m,
-                content: m.content.trim(),
+                content: event.data.response || m.content.trim(),
                 citations: event.data.citations,
                 followups: event.data.followups,
                 handoff: event.data.handoff,
                 intent: event.data.intent,
+                error: event.data.intent === "error" ? errs.generic : m.error,
               }));
               if (event.data.contact_link) setContactLink(event.data.contact_link);
               break;
-            case "done":
+            case "done": {
+              flushTokens();
+              const at = elapsed();
               result = { ...event.data, session_id: sid };
-              patchLast((m) => ({ ...m, usage: event.data, pending: false, trace: [...m.trace, { name: "done", at }] }));
+              patch(answer.id, (m) => ({
+                ...m,
+                messageId: event.data.message_id,
+                usage: event.data,
+                pending: false,
+                trace: [...m.trace, { name: "done", at }],
+              }));
               break;
+            }
             case "error":
-              patchLast((m) => ({ ...m, content: errors.generic, error: event.data.message, pending: false }));
+              flushTokens();
+              patch(answer.id, (m) => ({ ...m, content: m.content || errs.generic, error: event.data.message }));
               break;
           }
         }
       } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          const message =
-            err instanceof ApiError && err.status === 429
-              ? errors.rateLimited
-              : err instanceof ApiError && err.status === 422
-                ? errors.tooLong
-                : errors.generic;
-          patchLast((m) => ({ ...m, content: m.content || message, error: message, pending: false }));
-          if (err instanceof ApiError && err.status === 404) {
-            localStorage.removeItem(key);
-            setSessionId(null);
-          }
+        flushTokens();
+        if ((err as Error).name === "AbortError") {
+          setMessages((all) => all.filter((m) => m.id !== answer.id || m.content));
         } else {
-          patchLast((m) => ({ ...m, pending: false }));
+          const description = describe(err, errs);
+          patch(answer.id, (m) => ({ ...m, content: m.content || description, error: description }));
+          if (err instanceof ApiError && err.status === 404) setSession(null);
+          if (err instanceof ApiError && err.status === 409 && err.message.includes("ended")) setEnded(true);
         }
       } finally {
-        abortRef.current = null;
-        setStatus("idle");
+        flushTokens();
+        if (gen === generation.current) {
+          patch(answer.id, (m) => (m.pending ? { ...m, pending: false } : m));
+          setStatus("idle");
+        }
+        if (abortRef.current === controller) abortRef.current = null;
+        inFlight.current = false;
       }
       return result;
     },
-    [sessionId, status, lang, apiOpts, startSession, patchLast, errors, key],
+    [lang, channel, patch, pushToken, flushTokens, setSession],
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
+  /** Drop a failed answer (and its question) and ask again. */
+  const retry = useCallback(
+    (id: string) => {
+      const all = messagesRef.current;
+      const index = all.findIndex((m) => m.id === id);
+      const failed = all[index];
+      if (!failed?.question || inFlight.current) return;
+      setMessages((current) => current.filter((m) => m.id !== id && m.id !== all[index - 1]?.id));
+      void send(failed.question);
+    },
+    [send],
+  );
+
+  const rate = useCallback(
+    async (id: string, value: Feedback) => {
+      const target = messagesRef.current.find((m) => m.id === id);
+      const sid = sessionRef.current;
+      if (!target?.messageId || !sid) return;
+      const previous = target.feedback;
+      patch(id, (m) => ({ ...m, feedback: value }));
+      try {
+        await api.feedback(sid, target.messageId, value, optsRef.current);
+      } catch {
+        patch(id, (m) => ({ ...m, feedback: previous }));
+      }
+    },
+    [patch],
+  );
+
   const reset = useCallback(() => {
-    stop();
-    if (sessionId && messages.length) api.endSession(sessionId, apiOpts).catch(() => undefined);
-    localStorage.removeItem(key);
-    setSessionId(null);
+    generation.current += 1;
+    abortRef.current?.abort();
+    inFlight.current = false;
+    const sid = sessionRef.current;
+    if (sid && messages.length) api.endSession(sid, optsRef.current).catch(() => undefined);
+    setSession(null);
     setMessages([]);
+    setStatus("idle");
     setEnded(false);
-  }, [stop, sessionId, messages.length, apiOpts, key]);
+  }, [messages.length, setSession]);
 
   const end = useCallback(async () => {
-    if (!sessionId) return;
-    await api.endSession(sessionId, apiOpts).catch(() => undefined);
+    const sid = sessionRef.current;
+    if (!sid) return;
+    await api.endSession(sid, optsRef.current).catch(() => undefined);
+    // Keep the id in memory so the transcript can still be downloaded.
     localStorage.removeItem(key);
     setEnded(true);
-  }, [sessionId, apiOpts, key]);
+  }, [key]);
 
   return {
     sessionId,
@@ -235,11 +360,16 @@ export function useInterview({ lang, channel = "web", api: apiOpts, storageKey, 
     contactLink,
     messages,
     status,
+    online,
     busy: status !== "idle",
     ended,
     send,
     stop,
+    retry,
+    rate,
     reset,
     end,
   };
 }
+
+export type InterviewController = ReturnType<typeof useInterview>;

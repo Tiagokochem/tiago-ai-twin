@@ -9,7 +9,12 @@
  */
 (function () {
   "use strict";
-  var script = document.currentScript;
+  // currentScript is null when the tag is injected by a tag manager or bundler.
+  var script =
+    document.currentScript ||
+    [].slice.call(document.getElementsByTagName("script")).filter(function (s) {
+      return /\/widget\.js(\?|$)/.test(s.src);
+    })[0];
   if (!script || window.__tiagoAiWidget) return;
   window.__tiagoAiWidget = true;
 
@@ -123,6 +128,7 @@
   function setMenu(open) {
     menu.classList.toggle("open", open);
     launch.setAttribute("aria-expanded", String(open));
+    if (open) $(".opt").focus();
   }
   function openPanel() {
     setMenu(false);
@@ -135,11 +141,20 @@
     }
     panel.classList.add("open");
     launch.querySelector(".ico").innerHTML = ICON_X;
+    iframe.focus();
   }
   function closePanel() {
+    if (!panel.classList.contains("open")) return;
     panel.classList.remove("open");
     launch.querySelector(".ico").innerHTML = ICON_CHAT;
+    launch.focus();
   }
+
+  // The embedded interview has its own close button and asks us to close.
+  window.addEventListener("message", function (e) {
+    if (!iframe || e.source !== iframe.contentWindow || e.origin !== base) return;
+    if (e.data && e.data.type === "tiago-ai:close") closePanel();
+  });
 
   launch.addEventListener("click", function () {
     if (!online) {
@@ -152,7 +167,9 @@
   $(".chat").addEventListener("click", openPanel);
   $(".x").addEventListener("click", closePanel);
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { setMenu(false); closePanel(); }
+    if (e.key !== "Escape") return;
+    if (menu.classList.contains("open")) { setMenu(false); launch.focus(); }
+    closePanel();
   });
   document.addEventListener("click", function (e) {
     if (e.composedPath().indexOf(host) === -1) setMenu(false);
