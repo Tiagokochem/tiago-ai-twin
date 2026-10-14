@@ -21,9 +21,10 @@ interface Props {
   lang: Lang;
   channel?: "web" | "widget";
   apiOptions?: ApiOptions;
+  embedded?: boolean;
 }
 
-export function Interview({ dict, lang, channel = "web", apiOptions }: Props) {
+export function Interview({ dict, lang, channel = "web", apiOptions, embedded = false }: Props) {
   const params = useSearchParams();
   const chat = useInterview({ lang, channel, api: apiOptions, errors: dict.errors });
   const [voiceMode, setVoiceMode] = useState(params.get("mode") === "voice");
@@ -71,7 +72,12 @@ export function Interview({ dict, lang, channel = "web", apiOptions }: Props) {
   );
 
   return (
-    <div className="mx-auto grid h-[calc(100dvh-4rem)] max-w-7xl gap-6 px-3 sm:px-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+    <div
+      className={cn(
+        "mx-auto grid max-w-7xl gap-6 px-3 sm:px-5 lg:grid-cols-[minmax(0,1fr)_380px]",
+        embedded ? "h-dvh" : "h-[calc(100dvh-4rem)]",
+      )}
+    >
       <section className="flex min-h-0 flex-col">
         <div className="flex items-center justify-between gap-2 py-3">
           <div className="flex items-center gap-3">
@@ -151,7 +157,7 @@ export function Interview({ dict, lang, channel = "web", apiOptions }: Props) {
             />
           ) : empty ? (
             <div className="flex min-h-full flex-col items-center justify-center gap-8 py-10 text-center">
-              <Orb state={orbState} size={160} />
+              <Orb state={orbState} size={embedded ? 110 : 160} />
               <p className="max-w-xl text-balance text-mist-300">{chat.greeting}</p>
               <div className="w-full max-w-2xl text-left">
                 <Suggestions title={dict.suggested} items={chat.starters} onPick={ask} disabled={chat.busy} />

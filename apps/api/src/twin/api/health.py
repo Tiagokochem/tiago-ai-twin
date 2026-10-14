@@ -15,6 +15,9 @@ router = APIRouter(tags=["health"])
 async def health(
     response: Response, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> dict[str, object]:
+    # The embeddable widget probes this from third-party sites to decide
+    # whether to fall back to a plain WhatsApp button.
+    response.headers["Access-Control-Allow-Origin"] = "*"
     try:
         await session.execute(text("SELECT 1"))
         documents = await session.scalar(select(func.count()).select_from(Document))

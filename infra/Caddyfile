@@ -9,14 +9,27 @@
 		}
 	}
 
+	handle /widget.js {
+		header Cache-Control "public, max-age=300"
+		header Access-Control-Allow-Origin "*"
+		reverse_proxy web:3000
+	}
+
 	handle {
 		reverse_proxy web:3000
 	}
+
+	# Only the embed route may be framed, and only by the allowed sites.
+	@embed path_regexp ^/(pt|en)/embed
+	header @embed Content-Security-Policy "frame-ancestors 'self' {$EMBED_ORIGINS}"
+	@not_embed not path_regexp ^/(pt|en)/embed
+	header @not_embed Content-Security-Policy "frame-ancestors 'self'"
 
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "microphone=(self), camera=()"
 		-Server
 	}
 }
