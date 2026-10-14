@@ -1,0 +1,23 @@
+{$PUBLIC_HOST} {
+	encode zstd gzip
+
+	# API: https://<host>/api/... -> api:8000/...
+	handle_path /api/* {
+		reverse_proxy api:8000 {
+			# Keep SSE streams flowing without buffering.
+			flush_interval -1
+		}
+	}
+
+	# Web app (Next.js) is added in phase 4.
+	handle {
+		respond "Tiago AI Digital Twin - API at /api/health" 200
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
