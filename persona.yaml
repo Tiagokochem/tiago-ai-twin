@@ -53,11 +53,11 @@ messages:
       important matters, talk to him directly.
   handoff:
     pt: >-
-      Esse assunto é melhor tratar diretamente comigo. Já avisei o Tiago, e
-      você também pode falar com ele: {owner_contact_link}
+      Esse assunto o Tiago prefere tratar pessoalmente. Já avisei ele, e você
+      pode falar com ele diretamente: {owner_contact_link}
     en: >-
-      This is better discussed with me directly. I've already notified Tiago,
-      and you can also reach him here: {owner_contact_link}
+      Tiago prefers to discuss this in person. I've already notified him, and
+      you can reach him directly here: {owner_contact_link}
   unknown:
     pt: >-
       Não tenho essa informação nas minhas fontes, e prefiro não inventar.
@@ -98,3 +98,37 @@ messages:
   direct_contact:
     pt: "Prefere falar direto com o Tiago? {owner_contact_link}"
     en: "Prefer to talk to Tiago directly? {owner_contact_link}"
+  # WhatsApp channel (the bot number is not Tiago's personal number)
+  whatsapp_welcome:
+    pt: >-
+      Olá! Aqui é o *Tiago AI*, o assistente virtual do Tiago Kochem. Respondo
+      sobre a experiência e os projetos dele com base em fontes reais, por
+      texto ou áudio. Este número é só o assistente; para falar com o Tiago em
+      pessoa, use o WhatsApp dele: {owner_contact_link}
+
+      Comandos: */humano* chama o Tiago, */novo* recomeça a conversa.
+    en: >-
+      Hi! This is *Tiago AI*, Tiago Kochem's virtual assistant. I answer
+      questions about his experience and projects based on real sources, by
+      text or voice note. This number is only the assistant; to talk to Tiago
+      in person, use his WhatsApp: {owner_contact_link}
+
+      Commands: */human* calls Tiago, */new* restarts the conversation.
+  human_requested:
+    pt: >-
+      Pronto, avisei o Tiago e mandei um resumo da nossa conversa. Para falar
+      com ele diretamente, chame no WhatsApp pessoal dele (este número é só o
+      assistente): {owner_contact_link}
+    en: >-
+      Done, I've notified Tiago and sent him a summary of our conversation. To
+      talk to him directly, message his personal WhatsApp (this number is only
+      the assistant): {owner_contact_link}
+  session_reset:
+    pt: Conversa reiniciada. Pode perguntar!
+    en: Conversation restarted. Go ahead and ask!
+  slow_down:
+    pt: Recebi muitas mensagens em pouco tempo. Aguarde um instante e tente de novo.
+    en: I received many messages in a short time. Please wait a moment and try again.
+  audio_failed:
+    pt: Não consegui entender o áudio. Pode mandar de novo ou escrever a pergunta?
+    en: I couldn't understand the voice note. Could you send it again or type the question?

@@ -105,7 +105,7 @@ async def test_salary_question_is_handed_off_without_retrieval(persona: Persona)
     state, events = await run_turn(graph, "Qual sua pretensão salarial?", lang="pt")
 
     assert state["handoff_reason"] == "salary"
-    assert state["response"].startswith("Esse assunto é melhor tratar diretamente comigo")
+    assert state["response"].startswith("Esse assunto o Tiago prefere tratar pessoalmente")
     assert retriever.queries == []
     assert events[-1]["event"] == "token"
 

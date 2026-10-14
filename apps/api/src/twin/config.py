@@ -70,6 +70,25 @@ class Settings(BaseSettings):
     evolution_api_key: SecretStr | None = None
     evolution_instance: str | None = None
     evolution_webhook_token: SecretStr | None = None
+    whatsapp_debounce_seconds: float = 2.5
+    whatsapp_rate_per_minute: int = 8
+    whatsapp_rate_per_day: int = 150
+    # A WhatsApp chat idle for longer than this starts a new interview.
+    whatsapp_session_idle_hours: float = 12
+    # Idle web/widget/WhatsApp interviews are closed (and summarized) after this.
+    session_idle_minutes: int = 90
+
+    # Public base URL (e.g. https://1-2-3-4.sslip.io), used in owner notifications.
+    public_url: str | None = None
+
+    @property
+    def whatsapp_enabled(self) -> bool:
+        return bool(
+            self.evolution_api_url
+            and self.evolution_api_key
+            and self.evolution_instance
+            and self.evolution_webhook_token
+        )
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -33,6 +33,11 @@ class Messages(BaseModel):
     unavailable: Localized
     limit_reached: Localized
     direct_contact: Localized
+    whatsapp_welcome: Localized
+    human_requested: Localized
+    session_reset: Localized
+    slow_down: Localized
+    audio_failed: Localized
 
 
 MessageName = Literal[
@@ -44,6 +49,11 @@ MessageName = Literal[
     "unavailable",
     "limit_reached",
     "direct_contact",
+    "whatsapp_welcome",
+    "human_requested",
+    "session_reset",
+    "slow_down",
+    "audio_failed",
 ]
 
 

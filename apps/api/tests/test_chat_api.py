@@ -10,7 +10,7 @@ from pydantic import SecretStr
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from tests.fakes import FakeRetriever, ScriptedProvider, chunk
+from tests.fakes import FakeRetriever, FakeSpeech, ScriptedProvider, chunk
 from twin.agent.graph import Analysis, Followups, Grade
 from twin.channels.notify import HandoffEvent, SessionEndedEvent
 from twin.config import Settings
@@ -38,19 +38,6 @@ class RecordingNotifier:
 
     async def session_ended(self, event: SessionEndedEvent) -> None:
         self.ended.append(event)
-
-
-class FakeSpeech:
-    def __init__(self) -> None:
-        self.spoken: list[str] = []
-
-    async def transcribe(self, audio: bytes, filename: str, lang: Any) -> str:
-        return f"heard {len(audio)} bytes in {lang}"
-
-    async def synthesize(self, text: str, lang: Any) -> AsyncIterator[bytes]:
-        self.spoken.append(text)
-        yield b"ID3"
-        yield b"audio"
 
 
 def router(messages: Any) -> Analysis:

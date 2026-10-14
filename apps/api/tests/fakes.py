@@ -68,6 +68,43 @@ def chunk(
     )
 
 
+class FakeSender:
+    """Records what would be sent through Evolution API."""
+
+    def __init__(self, media: bytes = b"ogg") -> None:
+        self.texts: list[tuple[str, str]] = []
+        self.audios: list[tuple[str, bytes]] = []
+        self.media = media
+
+    async def send_text(self, number: str, text: str) -> None:
+        self.texts.append((number, text))
+
+    async def send_audio(self, number: str, audio: bytes) -> None:
+        self.audios.append((number, audio))
+
+    async def typing(self, number: str) -> None:
+        return None
+
+    async def media_bytes(self, message: Any) -> bytes:
+        return self.media
+
+    def to(self, number: str) -> list[str]:
+        return [text for n, text in self.texts if n == number]
+
+
+class FakeSpeech:
+    def __init__(self) -> None:
+        self.spoken: list[str] = []
+
+    async def transcribe(self, audio: bytes, filename: str, lang: Any) -> str:
+        return f"heard {len(audio)} bytes in {lang}"
+
+    async def synthesize(self, text: str, lang: Any) -> AsyncIterator[bytes]:
+        self.spoken.append(text)
+        yield b"ID3"
+        yield b"audio"
+
+
 class FakeRetriever:
     def __init__(self, chunks: list[RetrievedChunk] | None = None) -> None:
         self.chunks = chunks or []

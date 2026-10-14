@@ -3,6 +3,7 @@ import time
 import uuid
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -160,6 +161,36 @@ class ChatService:
                     )
                 )
             )
+
+    async def end_idle_sessions(self, max_idle: timedelta) -> int:
+        """End conversations with no activity for `max_idle` so the owner gets a summary."""
+        cutoff = datetime.now(UTC) - max_idle
+        async with self._sessionmaker() as db:
+            ids = (
+                await db.scalars(
+                    select(ChatSession.id).where(
+                        ChatSession.ended_at.is_(None),
+                        ChatSession.message_count > 0,
+                        ChatSession.last_activity_at < cutoff,
+                    )
+                )
+            ).all()
+        for session_id in ids:
+            await self.end_session(session_id)
+        return len(ids)
+
+    async def request_human(self, session_id: uuid.UUID, note: str) -> None:
+        """Explicit request to talk to the real person (e.g. /humano on WhatsApp)."""
+        session = await self.get_session(session_id)
+        async with self._sessionmaker() as db:
+            stored = await db.get(ChatSession, session_id)
+            assert stored is not None
+            if stored.handoff_at is None:
+                stored.handoff_at = func.now()
+            await db.commit()
+        await self._notify_handoff(
+            session_id, note, Reply(lang=session.lang, handoff_reason="explicit_request")
+        )
 
     async def stream_reply(
         self, session_id: uuid.UUID, text: str, lang: Lang | None = None

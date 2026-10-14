@@ -1,6 +1,9 @@
+import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+from datetime import timedelta
 
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -8,12 +11,33 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from twin import __version__
-from twin.api import admin, chat, health, job_fit, voice
+from twin.api import admin, channels, chat, health, job_fit, voice
 from twin.config import Settings, get_settings
 from twin.container import Container, build_container
 from twin.db.session import get_engine, get_sessionmaker
 from twin.logging import configure_logging
 from twin.observability.tracing import build_callbacks
+
+log = structlog.get_logger()
+
+
+async def sweep_idle_sessions(container: Container, every_seconds: float = 300) -> None:
+    """Close idle interviews so the owner receives their summary."""
+    max_idle = timedelta(minutes=container.settings.session_idle_minutes)
+    while True:
+        await asyncio.sleep(every_seconds)
+        try:
+            ended = await container.chat.end_idle_sessions(max_idle)
+            if ended:
+                log.info("sessions.idle_ended", count=ended)
+        except Exception as exc:
+            log.error("sessions.sweep_failed", error=repr(exc))
+
+
+async def shutdown(container: Container) -> None:
+    if container.whatsapp is not None:
+        await container.whatsapp.drain()
+    await container.chat.drain()
 
 
 def create_app(container: Container | None = None, settings: Settings | None = None) -> FastAPI:
@@ -25,7 +49,7 @@ def create_app(container: Container | None = None, settings: Settings | None = N
         if container is not None:
             app.state.container = container
             yield
-            await container.chat.drain()
+            await shutdown(container)
             return
         async with AsyncConnectionPool(
             settings.psycopg_url,
@@ -39,8 +63,12 @@ def create_app(container: Container | None = None, settings: Settings | None = N
                 settings, get_sessionmaker(), checkpointer, callbacks=build_callbacks(settings)
             )
             app.state.container = built
+            sweeper = asyncio.create_task(sweep_idle_sessions(built))
             yield
-            await built.chat.drain()
+            sweeper.cancel()
+            with suppress(asyncio.CancelledError):
+                await sweeper
+            await shutdown(built)
         await get_engine().dispose()
 
     app = FastAPI(title="Tiago AI Digital Twin", version=__version__, lifespan=lifespan)
@@ -54,6 +82,7 @@ def create_app(container: Container | None = None, settings: Settings | None = N
     app.include_router(chat.router)
     app.include_router(job_fit.router)
     app.include_router(voice.router)
+    app.include_router(channels.router)
     app.include_router(admin.router)
     return app
 
