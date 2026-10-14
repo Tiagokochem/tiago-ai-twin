@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
 from twin.config import Settings, get_settings
-from twin.main import app
+from twin.main import create_app
 
 TOKEN = "test-admin-token"
 
@@ -13,10 +13,10 @@ TOKEN = "test-admin-token"
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     settings = Settings(admin_token=SecretStr(TOKEN), openai_api_key=None)
+    app = create_app(settings=settings)
     app.dependency_overrides[get_settings] = lambda: settings
     monkeypatch.setattr("twin.rag.ingest.get_settings", lambda: settings)
     yield TestClient(app)
-    app.dependency_overrides.clear()
 
 
 def test_ingest_requires_admin_token(client: TestClient) -> None:

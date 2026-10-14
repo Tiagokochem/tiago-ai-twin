@@ -21,4 +21,4 @@ RUN useradd --create-home --uid 1000 twin
 USER twin
 
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head && uvicorn twin.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn twin.main:app_factory --factory --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
