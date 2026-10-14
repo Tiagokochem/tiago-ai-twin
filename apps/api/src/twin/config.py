@@ -60,7 +60,8 @@ class Settings(BaseSettings):
     rate_limit_per_day: int = 200
     session_max_messages: int = 40
     session_max_tokens: int = 150_000
-    max_message_chars: int = 2_000
+    # Chat messages may carry a pasted job description (job_fit intent).
+    max_message_chars: int = 12_000
     max_job_description_chars: int = 12_000
 
     # WhatsApp (Evolution API)

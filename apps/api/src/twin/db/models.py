@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, SmallInteger, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TIMESTAMP, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -98,6 +98,11 @@ class ChatMessage(Base):
     handoff_reason: Mapped[str | None] = mapped_column(String(30))
     degraded: Mapped[bool] = mapped_column(Boolean, default=False)
     latency_ms: Mapped[int | None] = mapped_column(Integer)
+    # Aggregate hash of the prompt templates that produced this answer.
+    prompt_version: Mapped[str | None] = mapped_column(String(16))
+    # Recruiter thumbs: 1 up, -1 down.
+    feedback: Mapped[int | None] = mapped_column(SmallInteger)
+    feedback_comment: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )
@@ -112,10 +117,13 @@ class LLMCallRecord(Base):
     __tablename__ = "llm_calls"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    message_id: Mapped[int] = mapped_column(
+    # Null for calls outside a chat turn (scope "job_fit").
+    message_id: Mapped[int | None] = mapped_column(
         ForeignKey("chat_messages.id", ondelete="CASCADE"), index=True
     )
+    scope: Mapped[str] = mapped_column(String(20), default="chat", server_default="chat")
     node: Mapped[str] = mapped_column(String(40))
+    prompt: Mapped[str | None] = mapped_column(String(60))
     provider: Mapped[str] = mapped_column(String(40))
     model: Mapped[str] = mapped_column(String(80))
     latency_ms: Mapped[int] = mapped_column(Integer)
@@ -126,5 +134,5 @@ class LLMCallRecord(Base):
     fallback: Mapped[bool] = mapped_column(Boolean, default=False)
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now()
+        TIMESTAMP(timezone=True), server_default=func.now(), index=True
     )

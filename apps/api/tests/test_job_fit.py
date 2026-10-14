@@ -4,7 +4,8 @@ from twin.agent.job_fit import (
     JobFitService,
     JobRequirements,
     RequirementAssessment,
-    _interleave,
+    fit_score,
+    interleave,
 )
 from twin.config import REPO_ROOT
 from twin.llm.gateway import LLMGateway
@@ -15,9 +16,9 @@ from twin.voice.speech import speakable
 def test_interleave_round_robins_and_dedupes() -> None:
     a = [chunk(1), chunk(2), chunk(3)]
     b = [chunk(2), chunk(4)]
-    merged = _interleave([a, b], limit=10)
+    merged = interleave([a, b], limit=10)
     assert [c.chunk_id for c in merged] == [1, 2, 4, 3]
-    assert len(_interleave([a, b], limit=2)) == 2
+    assert len(interleave([a, b], limit=2)) == 2
 
 
 async def test_job_fit_extracts_retrieves_and_cites() -> None:
@@ -27,7 +28,6 @@ async def test_job_fit_extracts_retrieves_and_cites() -> None:
                 role="AI Engineer", requirements=["Python", "LLM agents"]
             ),
             "JobFitAssessment": JobFitAssessment(
-                score=78,
                 summary="Strong fit [1], agents in own products [2][9].",
                 requirements=[
                     RequirementAssessment(
@@ -53,6 +53,14 @@ async def test_job_fit_extracts_retrieves_and_cites() -> None:
     assert result.assessment.summary.endswith("[2].")  # [9] does not exist and is removed
     assert [c["n"] for c in result.citations] == [1, 2]
     assert result.usage["llm_calls"] == 2
+    assert result.score == 83  # met (weight 2) + partial (weight 1)
+
+
+def test_fit_score_is_deterministic_and_rank_weighted() -> None:
+    assert fit_score([]) == 0
+    assert fit_score(["met", "met"]) == 100
+    assert fit_score(["gap", "gap"]) == 0
+    assert fit_score(["met", "gap"]) > fit_score(["gap", "met"])
 
 
 def test_speakable_strips_markdown_and_citations() -> None:

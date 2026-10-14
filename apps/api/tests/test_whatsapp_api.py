@@ -50,7 +50,8 @@ async def container() -> AsyncIterator[Container]:
             "Grade": Grade(relevant_ids=[0]),
             "Followups": Followups(questions=["unused"]),
         },
-        answer=lambda messages: f"Uso **Laravel** [1]. Pergunta: {messages[-1].content}",
+        # messages[-1] is the <sources> message; [-2] is the question.
+        answer=lambda messages: f"Uso **Laravel** [1]. Pergunta: {messages[-2].content}",
     )
     settings = Settings(
         database_url=DATABASE_URL,

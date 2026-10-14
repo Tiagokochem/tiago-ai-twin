@@ -25,7 +25,7 @@ async def run_ingest(
     except EmbedderNotConfiguredError as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
     except KnowledgeError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
     stats = await ingest(session, docs, embedder)
     return asdict(stats)
 

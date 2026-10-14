@@ -7,6 +7,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from tests.fakes import FakeRetriever, ScriptedProvider, chunk
 from twin.agent.graph import AgentDeps, Analysis, Followups, Grade, Rewrite, build_graph
+from twin.agent.job_fit import JobRequirements
 from twin.agent.state import turn_input
 from twin.config import REPO_ROOT
 from twin.llm.gateway import LLMGateway
@@ -68,7 +69,7 @@ async def test_answers_with_citations_and_followups(persona: Persona) -> None:
     assert state["citations"][1]["heading"] == "Features"
     assert state["followups"] == ["What stack?", "Any tests?"]
     tokens = "".join(e["data"] for e in events if e["event"] == "token")
-    assert "Nuvartis" in tokens
+    assert tokens.strip() == state["response"]  # invalid [7] never reaches the user
     assert [e["data"] for e in events if e["event"] == "status"] == [
         "thinking",
         "searching",
@@ -89,7 +90,12 @@ async def test_rewrites_once_then_hands_off_when_nothing_is_relevant(persona: Pe
 
     state, _ = await run_turn(graph, "Do you know Kubernetes?")
 
-    assert [q for q, _ in retriever.queries] == ["q", "kubernetes clusters"]
+    # multi-query on the first attempt, then only the rewritten query
+    assert [q for q, _ in retriever.queries] == [
+        "q",
+        "Do you know Kubernetes?",
+        "kubernetes clusters",
+    ]
     assert state["handoff_reason"] == "unknown"
     assert "wa.me/5545999990000" in state["response"]
     assert "stream" not in [name for name, _ in provider.calls]
@@ -159,23 +165,58 @@ async def test_memory_keeps_previous_turns_and_whatsapp_skips_followups(
     await run_turn(graph, "first", thread="wa", channel="whatsapp")
     state, _ = await run_turn(graph, "second", thread="wa", channel="whatsapp")
 
-    # system + human, then system + human + ai + human
-    assert seen == [2, 4]
+    # system + human + sources, then system + human + ai + human + sources
+    assert seen == [3, 5]
     assert len(state["messages"]) == 4
     assert "Followups" not in [name for name, _ in provider.calls]
 
 
-async def test_job_fit_uses_full_description_and_skips_grading(persona: Persona) -> None:
+async def test_job_fit_searches_each_requirement_and_skips_grading(persona: Persona) -> None:
+    seen: list[str] = []
+
+    def answer(messages: Sequence[BaseMessage]) -> str:
+        seen.append(str(messages[0].content))
+        return "Python: met [1]."
+
     provider = ScriptedProvider(
-        structured={"Analysis": analysis("job_fit"), "Followups": Followups(questions=[])},
-        answer="Python: met [1].",
+        structured={
+            "Analysis": analysis("job_fit"),
+            "JobRequirements": JobRequirements(role="AI Engineer", requirements=["Python", "RAG"]),
+            "Followups": Followups(questions=[]),
+        },
+        answer=answer,
     )
     retriever = FakeRetriever([chunk(i) for i in range(1, 12)])
     graph = make_graph(persona, provider, retriever)
-    job = "Senior AI Engineer: Python, LangGraph, RAG"
 
-    state, _ = await run_turn(graph, job)
+    state, _ = await run_turn(graph, "Senior AI Engineer: Python, LangGraph, RAG")
 
-    assert retriever.queries == [(job, "en")]
-    assert len(state["documents"]) == 10
+    assert [q for q, _ in retriever.queries] == ["Python", "RAG"]
+    assert state["requirements"] == ["Python", "RAG"]
+    assert 0 < len(state["documents"]) <= 10
+    assert "- Python" in seen[0]  # requirements reach the answer prompt
     assert "Grade" not in [name for name, _ in provider.calls]
+
+
+async def test_handoff_without_reason_is_an_explicit_request(persona: Persona) -> None:
+    provider = ScriptedProvider(structured={"Analysis": analysis("handoff")})
+    state, _ = await run_turn(make_graph(persona, provider), "Can I talk to the real Tiago?")
+    assert state["handoff_reason"] == "explicit_request"
+
+
+async def test_grading_failure_keeps_documents(persona: Persona) -> None:
+    def broken_grade(messages: Sequence[BaseMessage]) -> Grade:
+        raise ValueError("bad json")
+
+    provider = ScriptedProvider(
+        structured={
+            "Analysis": analysis("about_tiago"),
+            "Grade": broken_grade,  # type: ignore[dict-item]
+            "Followups": Followups(questions=[]),
+        },
+        answer="Yes [1].",
+    )
+    graph = make_graph(persona, provider, FakeRetriever([chunk(1)]))
+    state, _ = await run_turn(graph, "Python?")
+    assert state["response"] == "Yes [1]."
+    assert state["handoff_reason"] is None

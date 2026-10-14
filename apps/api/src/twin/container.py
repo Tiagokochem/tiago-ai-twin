@@ -14,7 +14,7 @@ from twin.config import Settings
 from twin.llm.gateway import LLMGateway
 from twin.llm.providers import build_providers
 from twin.persona import Persona, load_persona
-from twin.rag.embeddings import Embedder, OpenAIEmbedder
+from twin.rag.embeddings import CachedEmbedder, Embedder, OpenAIEmbedder
 from twin.rag.retriever import HybridRetriever, Retriever
 from twin.security.rate_limit import RateLimiter
 from twin.voice.speech import Speech, build_speech
@@ -36,10 +36,12 @@ class Container:
 
 def build_embedder_or_none(settings: Settings) -> Embedder | None:
     if settings.openai_api_key and settings.openai_api_key.get_secret_value():
-        return OpenAIEmbedder(
-            api_key=settings.openai_api_key.get_secret_value(),
-            model=settings.embedding_model,
-            dimensions=settings.embedding_dimensions,
+        return CachedEmbedder(
+            OpenAIEmbedder(
+                api_key=settings.openai_api_key.get_secret_value(),
+                model=settings.embedding_model,
+                dimensions=settings.embedding_dimensions,
+            )
         )
     return None
 
@@ -74,7 +76,8 @@ def build_container(
         notifier = WhatsAppNotifier(sender, persona.owner_whatsapp, settings.public_url)
     gateway = gateway or LLMGateway(build_providers(settings), settings.llm_timeout_seconds)
     retriever = retriever or HybridRetriever(sessionmaker, build_embedder_or_none(settings))
-    graph = build_graph(AgentDeps(llm=gateway, retriever=retriever, persona=persona), checkpointer)
+    deps = AgentDeps(llm=gateway, retriever=retriever, persona=persona)
+    graph = build_graph(deps, checkpointer)
     chat = ChatService(
         graph,
         sessionmaker,
@@ -82,6 +85,7 @@ def build_container(
         notifier or LogNotifier(),
         ChatLimits(settings.session_max_messages, settings.session_max_tokens),
         callbacks=callbacks,
+        prompt_version=deps.prompts.version,
     )
     return Container(
         settings=settings,
@@ -90,7 +94,7 @@ def build_container(
         retriever=retriever,
         chat=chat,
         rate_limiter=RateLimiter(settings.rate_limit_per_minute, settings.rate_limit_per_day),
-        job_fit=JobFitService(gateway, retriever, persona),
+        job_fit=deps.job_fit or JobFitService(gateway, retriever, persona),
         speech=speech,
         whatsapp=(
             WhatsAppChannel(

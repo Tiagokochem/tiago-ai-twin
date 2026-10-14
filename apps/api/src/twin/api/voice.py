@@ -47,7 +47,7 @@ async def transcribe(
     if len(data) > limit:
         raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "audio too large")
     if not data:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "empty audio")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "empty audio")
     try:
         text = await speech.transcribe(data, audio.filename or "speech.webm", lang)
     except Exception as exc:

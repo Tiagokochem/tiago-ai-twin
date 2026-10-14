@@ -51,6 +51,7 @@ class LLMCall:
     ok: bool
     fallback: bool = False
     error: str | None = None
+    prompt: str | None = None
 
 
 @dataclass

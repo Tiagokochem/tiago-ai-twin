@@ -1,5 +1,6 @@
 import hashlib
 import math
+from collections import OrderedDict
 from typing import Protocol
 
 from openai import AsyncOpenAI
@@ -50,3 +51,26 @@ class HashEmbedder:
         values = values[: self.dimensions]
         norm = math.sqrt(sum(v * v for v in values)) or 1.0
         return [v / norm for v in values]
+
+
+class CachedEmbedder:
+    """LRU cache in front of an embedder. Query embeddings repeat a lot
+    (suggested questions, evals, retries), and each one is a network call."""
+
+    def __init__(self, inner: Embedder, max_entries: int = 2048) -> None:
+        self.inner = inner
+        self.model = inner.model
+        self.dimensions = inner.dimensions
+        self._max = max_entries
+        self._cache: OrderedDict[str, list[float]] = OrderedDict()
+
+    async def embed(self, texts: list[str]) -> list[list[float]]:
+        missing = list(dict.fromkeys(t for t in texts if t not in self._cache))
+        if missing:
+            for text, vector in zip(missing, await self.inner.embed(missing), strict=True):
+                self._cache[text] = vector
+        for text in texts:
+            self._cache.move_to_end(text)
+        while len(self._cache) > self._max:
+            self._cache.popitem(last=False)
+        return [self._cache[t] for t in texts]

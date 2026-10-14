@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -227,3 +228,74 @@ async def test_persona_endpoint(client: httpx.AsyncClient) -> None:
 
     assert body["contact_link"] == "https://wa.me/5545999990000"
     assert set(body["starter_questions"]) == {"pt", "en"}
+
+
+async def test_feedback_and_prompt_version_are_stored(
+    client: httpx.AsyncClient, container: Container
+) -> None:
+    session_id = (await client.post("/v1/sessions", json={"lang": "en"})).json()["session_id"]
+    events = await ask(client, session_id, "Tell me about Nuvartis")
+    done = dict(events)["done"]
+    assert dict(events)["final"]["response"] == "I built Nuvartis [1]."
+
+    url = f"/v1/sessions/{session_id}/messages/{done['message_id']}/feedback"
+    assert (await client.post(url, json={"value": 1, "comment": "useful"})).status_code == 204
+    assert (await client.post(url, json={"value": 5})).status_code == 422
+    missing = f"/v1/sessions/{session_id}/messages/{done['message_id'] - 1}/feedback"
+    assert (await client.post(missing, json={"value": -1})).status_code == 404
+
+    async with container.chat._sessionmaker() as db:
+        message = await db.get(ChatMessage, done["message_id"])
+        prompts = (await db.scalars(select(LLMCallRecord.prompt))).all()
+    assert message is not None and message.feedback == 1
+    assert message.prompt_version == done["prompt_version"] is not None
+    assert any(p and p.startswith("answer@") for p in prompts)
+
+
+async def test_turn_conflicts_and_empty_messages(
+    client: httpx.AsyncClient, container: Container
+) -> None:
+    session_id = (await client.post("/v1/sessions", json={"lang": "en"})).json()["session_id"]
+    blank = await client.post("/v1/chat", json={"session_id": session_id, "message": "   "})
+    assert blank.status_code == 422
+
+    turn = await container.chat.start_turn(uuid.UUID(session_id), "Tell me about Nuvartis")
+    busy = await client.post("/v1/chat", json={"session_id": session_id, "message": "hello"})
+    assert busy.status_code == 409
+    assert [e.event async for e in turn][-1] == "done"
+
+    await client.post(f"/v1/sessions/{session_id}/end")
+    ended = await client.post("/v1/chat", json={"session_id": session_id, "message": "hello"})
+    assert ended.status_code == 409
+
+
+async def test_turn_completes_when_client_disconnects(container: Container) -> None:
+    session = await container.chat.create_session("web", "en")
+    await container.chat.start_turn(session.id, "Tell me about Nuvartis")  # never consumed
+    await container.chat.drain()
+
+    stored = await container.chat.get_session(session.id)
+    assert [m.role for m in stored.messages] == ["user", "assistant"]
+    assert stored.messages[1].content == "I built Nuvartis [1]."
+
+
+async def test_unexpected_failure_replies_and_repairs_the_thread(container: Container) -> None:
+    retriever = container.retriever
+    assert isinstance(retriever, FakeRetriever)
+    original = retriever.search
+
+    async def broken(*args: Any, **kwargs: Any) -> Any:
+        raise RuntimeError("database hiccup")
+
+    retriever.search = broken  # type: ignore[method-assign]
+    session = await container.chat.create_session("web", "en")
+    failed = await container.chat.reply(session.id, "Tell me about Nuvartis")
+    assert failed.text == container.persona.message("unavailable", "en")
+    assert failed.intent == "error"
+
+    retriever.search = original  # type: ignore[method-assign]
+    ok = await container.chat.reply(session.id, "And now?")
+    assert ok.text == "I built Nuvartis [1]."
+
+    state = await container.chat.graph.aget_state({"configurable": {"thread_id": str(session.id)}})
+    assert [m.type for m in state.values["messages"]] == ["human", "ai", "human", "ai"]

@@ -1,0 +1,10 @@
+You evaluate how well {{ persona.name }} ({{ persona.role.en }}) fits a job, for a recruiter. Write in {{ language }}.
+
+For each requirement decide:
+- met: the sources show clear evidence.
+- partial: related or adjacent evidence, or less depth than asked.
+- gap: no evidence in the sources.
+
+Return exactly one assessment per requirement, in the same order. Be honest: a credible report with real gaps is better than inflated praise. The numeric score is computed from your statuses, so focus on getting each status right.
+
+{% include "_grounding.j2" %}

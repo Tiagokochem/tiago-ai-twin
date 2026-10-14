@@ -20,6 +20,7 @@ class TwinState(TypedDict, total=False):
     question: str
     intent: Intent | None
     search_query: str
+    requirements: list[str]
     retries: int
     documents: list[dict[str, Any]]
     degraded: bool
@@ -37,6 +38,7 @@ def turn_input(question: str, lang: Lang, channel: Channel) -> TwinState:
         "question": question,
         "intent": None,
         "search_query": question,
+        "requirements": [],
         "retries": 0,
         "documents": [],
         "degraded": False,

@@ -4,18 +4,19 @@ from collections.abc import AsyncIterator
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from twin.agent.state import Lang
 from twin.api.deps import ContainerDep, client_hash, rate_limited
-from twin.chat.service import SessionNotFoundError
+from twin.chat.service import (
+    SessionBusyError,
+    SessionEndedError,
+    SessionNotFoundError,
+)
 from twin.chat.transcript import render_markdown
-
-log = structlog.get_logger()
 
 router = APIRouter(prefix="/v1", tags=["chat"])
 
@@ -66,6 +67,11 @@ class ChatIn(BaseModel):
     session_id: uuid.UUID
     message: str = Field(min_length=1)
     lang: Lang | None = None
+
+
+class FeedbackIn(BaseModel):
+    value: Literal[-1, 1]
+    comment: str | None = Field(default=None, max_length=1_000)
 
 
 @router.get("/persona", response_model=PersonaOut)
@@ -159,25 +165,39 @@ async def delete_session(session_id: uuid.UUID, container: ContainerDep) -> None
 
 
 @router.post("/chat", dependencies=[Depends(rate_limited)])
-async def chat(body: ChatIn, request: Request, container: ContainerDep) -> EventSourceResponse:
-    limit = container.settings.max_job_description_chars
-    if len(body.message) > limit:
+async def chat(body: ChatIn, container: ContainerDep) -> EventSourceResponse:
+    text = body.message.strip()
+    if not text:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "empty message")
+    limit = container.settings.max_message_chars
+    if len(text) > limit:
         raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, f"message longer than {limit} characters"
+            status.HTTP_422_UNPROCESSABLE_CONTENT, f"message longer than {limit} characters"
         )
     try:
-        await container.chat.get_session(body.session_id)
+        turn = await container.chat.start_turn(body.session_id, text, body.lang)
     except SessionNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "session not found") from exc
+    except SessionEndedError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, "session ended") from exc
+    except SessionBusyError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, "a reply is already in progress") from exc
 
     async def events() -> AsyncIterator[dict[str, str]]:
-        try:
-            async for event in container.chat.stream_reply(
-                body.session_id, body.message.strip(), body.lang
-            ):
-                yield {"event": event.event, "data": json.dumps(event.data, ensure_ascii=False)}
-        except Exception as exc:
-            log.exception("chat.stream_failed", error=repr(exc))
-            yield {"event": "error", "data": json.dumps({"message": "internal error"})}
+        async for event in turn:
+            yield {"event": event.event, "data": json.dumps(event.data, ensure_ascii=False)}
 
     return EventSourceResponse(events(), ping=15, headers={"X-Accel-Buffering": "no"})
+
+
+@router.post(
+    "/sessions/{session_id}/messages/{message_id}/feedback",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def feedback(
+    session_id: uuid.UUID, message_id: int, body: FeedbackIn, container: ContainerDep
+) -> None:
+    try:
+        await container.chat.set_feedback(session_id, message_id, body.value, body.comment)
+    except SessionNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "message not found") from exc

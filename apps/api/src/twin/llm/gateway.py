@@ -37,6 +37,7 @@ class LLMGateway:
         messages: Sequence[BaseMessage],
         schema: type[SchemaT],
         tier: Tier = "fast",
+        prompt: str | None = None,
     ) -> SchemaT:
         errors: list[str] = []
         for index, provider in enumerate(self.providers):
@@ -45,15 +46,19 @@ class LLMGateway:
                 async with asyncio.timeout(self.timeout_seconds):
                     result, usage = await provider.structured(messages, schema, tier)
             except Exception as exc:
-                self._record(node, provider, tier, started, TokenUsage(), index, exc)
+                self._record(node, provider, tier, started, TokenUsage(), index, prompt, exc)
                 errors.append(f"{provider.name}: {exc!r}")
                 continue
-            self._record(node, provider, tier, started, usage, index)
+            self._record(node, provider, tier, started, usage, index, prompt)
             return result
         raise AllProvidersFailedError("; ".join(errors) or "no LLM provider configured")
 
     async def stream(
-        self, node: str, messages: Sequence[BaseMessage], tier: Tier = "answer"
+        self,
+        node: str,
+        messages: Sequence[BaseMessage],
+        tier: Tier = "answer",
+        prompt: str | None = None,
     ) -> AsyncIterator[str]:
         errors: list[str] = []
         for index, provider in enumerate(self.providers):
@@ -69,12 +74,12 @@ class LLMGateway:
                         emitted = True
                         yield item
             except Exception as exc:
-                self._record(node, provider, tier, started, usage, index, exc)
+                self._record(node, provider, tier, started, usage, index, prompt, exc)
                 if emitted:
                     raise
                 errors.append(f"{provider.name}: {exc!r}")
                 continue
-            self._record(node, provider, tier, started, usage, index)
+            self._record(node, provider, tier, started, usage, index, prompt)
             return
         raise AllProvidersFailedError("; ".join(errors) or "no LLM provider configured")
 
@@ -86,6 +91,7 @@ class LLMGateway:
         started: float,
         usage: TokenUsage,
         index: int,
+        prompt: str | None = None,
         error: BaseException | None = None,
     ) -> None:
         model = provider.model_name(tier)
@@ -100,6 +106,7 @@ class LLMGateway:
             ok=error is None,
             fallback=index > 0,
             error=repr(error)[:500] if error else None,
+            prompt=prompt,
         )
         record_call(call)
         if error is None:

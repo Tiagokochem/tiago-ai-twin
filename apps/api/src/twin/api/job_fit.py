@@ -42,17 +42,18 @@ async def job_fit(body: JobFitIn, container: ContainerDep) -> JobFitOut:
     limit = container.settings.max_job_description_chars
     if len(body.description) > limit:
         raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, f"description longer than {limit} characters"
+            status.HTTP_422_UNPROCESSABLE_CONTENT, f"description longer than {limit} characters"
         )
     try:
         result = await container.job_fit.analyze(body.description.strip(), body.lang)
     except AllProvidersFailedError as exc:
         log.error("job_fit.providers_failed", error=str(exc))
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "LLM unavailable") from exc
+    await container.chat.record_usage(result.tracker, "job_fit")
     a = result.assessment
     return JobFitOut(
         role=result.role,
-        score=a.score,
+        score=result.score,
         summary=a.summary,
         requirements=[RequirementOut(**r.model_dump()) for r in a.requirements],
         strengths=a.strengths,

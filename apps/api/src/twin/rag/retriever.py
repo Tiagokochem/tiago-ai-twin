@@ -52,6 +52,19 @@ def reciprocal_rank_fusion(rankings: Sequence[Sequence[int]], k: int = 60) -> di
     return scores
 
 
+def fuse_results(results: Sequence[RetrievalResult], top_k: int, k: int = 60) -> RetrievalResult:
+    """RRF across several queries' results (multi-query retrieval)."""
+    by_id: dict[int, RetrievedChunk] = {}
+    rankings: list[list[int]] = []
+    for result in results:
+        rankings.append([c.chunk_id for c in result.chunks])
+        for chunk in result.chunks:
+            by_id.setdefault(chunk.chunk_id, chunk)
+    scores = reciprocal_rank_fusion(rankings, k)
+    top = sorted(scores, key=lambda i: -scores[i])[:top_k]
+    return RetrievalResult([by_id[i] for i in top], any(r.degraded for r in results))
+
+
 class HybridRetriever:
     """pgvector cosine search + Postgres full-text search, fused with RRF.
 

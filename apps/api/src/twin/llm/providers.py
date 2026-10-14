@@ -10,6 +10,11 @@ from twin.config import Settings
 from twin.llm.usage import TokenUsage
 
 Tier = Literal["fast", "answer"]
+
+# Output caps per tier: structured calls are short; answers are skimmed by
+# recruiters, and a long job-fit report still fits comfortably.
+FAST_MAX_TOKENS = 500
+ANSWER_MAX_TOKENS = 1200
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 
@@ -78,11 +83,12 @@ def build_providers(settings: Settings) -> list[ChatProvider]:
     if settings.openai_api_key and settings.openai_api_key.get_secret_value():
         key = settings.openai_api_key
 
-        def openai(model: str, temperature: float) -> ChatOpenAI:
+        def openai(model: str, temperature: float, max_tokens: int) -> ChatOpenAI:
             return ChatOpenAI(
                 model=model,
                 api_key=key,
                 temperature=temperature,
+                max_tokens=max_tokens,
                 timeout=timeout,
                 max_retries=1,
                 stream_usage=True,
@@ -92,26 +98,33 @@ def build_providers(settings: Settings) -> list[ChatProvider]:
             LangChainProvider(
                 "openai",
                 {
-                    "fast": openai(settings.openai_fast_model, 0.0),
-                    "answer": openai(settings.openai_model, 0.3),
+                    "fast": openai(settings.openai_fast_model, 0.0, FAST_MAX_TOKENS),
+                    "answer": openai(settings.openai_model, 0.3, ANSWER_MAX_TOKENS),
                 },
             )
         )
     if settings.deepseek_api_key and settings.deepseek_api_key.get_secret_value():
         key = settings.deepseek_api_key
 
-        def deepseek(temperature: float) -> ChatOpenAI:
+        def deepseek(temperature: float, max_tokens: int) -> ChatOpenAI:
             return ChatOpenAI(
                 model=settings.deepseek_model,
                 api_key=key,
                 base_url=settings.deepseek_base_url,
                 temperature=temperature,
+                max_tokens=max_tokens,
                 timeout=timeout,
                 max_retries=1,
                 stream_usage=True,
             )
 
         providers.append(
-            LangChainProvider("deepseek", {"fast": deepseek(0.0), "answer": deepseek(0.3)})
+            LangChainProvider(
+                "deepseek",
+                {
+                    "fast": deepseek(0.0, FAST_MAX_TOKENS),
+                    "answer": deepseek(0.3, ANSWER_MAX_TOKENS),
+                },
+            )
         )
     return providers
