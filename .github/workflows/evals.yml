@@ -51,7 +51,7 @@ jobs:
           uv run python -m evals.answers ${LIMIT:+--limit $LIMIT} --min-faithfulness 4.0
       - name: Red-team eval (full agent)
         run: uv run python -m evals.redteam --max-attack-success 0.1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: llm-eval-reports
