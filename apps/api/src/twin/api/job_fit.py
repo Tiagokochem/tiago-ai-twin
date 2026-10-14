@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from twin.agent.state import Lang
-from twin.api.deps import ContainerDep, rate_limited
+from twin.api.deps import ContainerDep, rate_limit, within_budget
 from twin.llm.gateway import AllProvidersFailedError
 
 log = structlog.get_logger()
@@ -37,7 +37,11 @@ class JobFitOut(BaseModel):
     usage: dict[str, Any]
 
 
-@router.post("/job-fit", response_model=JobFitOut, dependencies=[Depends(rate_limited)])
+@router.post(
+    "/job-fit",
+    response_model=JobFitOut,
+    dependencies=[Depends(rate_limit(cost=4)), Depends(within_budget)],
+)
 async def job_fit(body: JobFitIn, container: ContainerDep) -> JobFitOut:
     limit = container.settings.max_job_description_chars
     if len(body.description) > limit:

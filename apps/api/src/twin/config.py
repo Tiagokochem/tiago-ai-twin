@@ -54,6 +54,8 @@ class Settings(BaseSettings):
 
     admin_token: SecretStr | None = None
     cors_origins: str = ""
+    # Key for hashing client IPs (rate limits, session fingerprint).
+    ip_hash_secret: SecretStr | None = None
 
     # Abuse protection
     rate_limit_per_minute: int = 12
@@ -63,6 +65,8 @@ class Settings(BaseSettings):
     # Chat messages may carry a pasted job description (job_fit intent).
     max_message_chars: int = 12_000
     max_job_description_chars: int = 12_000
+    # Circuit breaker on LLM + speech spend per UTC day (0 disables it).
+    daily_budget_usd: float = 5.0
 
     # WhatsApp (Evolution API)
     whatsapp_bot_number: str | None = None

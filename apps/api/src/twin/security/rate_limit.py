@@ -21,21 +21,22 @@ class RateLimiter:
         self._clock = clock
         self._hits: dict[str, deque[float]] = {}
 
-    def hit(self, key: str) -> float | None:
-        """Register a hit. Returns None if allowed, else seconds to wait."""
+    def hit(self, key: str, cost: int = 1) -> float | None:
+        """Register a request worth `cost` hits (expensive endpoints cost
+        more). Returns None if allowed, else seconds to wait."""
         now = self._clock()
         hits = self._hits.setdefault(key, deque())
         while hits and now - hits[0] >= DAY:
             hits.popleft()
 
         last_minute = sum(1 for t in hits if now - t < MINUTE)
-        if last_minute >= self._per_minute:
-            oldest = next(t for t in hits if now - t < MINUTE)
+        if last_minute + cost > self._per_minute:
+            oldest = next((t for t in hits if now - t < MINUTE), now)
             return MINUTE - (now - oldest)
-        if len(hits) >= self._per_day:
-            return DAY - (now - hits[0])
+        if len(hits) + cost > self._per_day:
+            return DAY - (now - hits[0]) if hits else DAY
 
-        hits.append(now)
+        hits.extend([now] * cost)
         if len(self._hits) > 10_000:
             self._evict(now)
         return None

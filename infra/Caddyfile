@@ -3,6 +3,10 @@
 
 	# API: https://<host>/api/... -> api:8000/...
 	handle_path /api/* {
+		# Largest legitimate body is a voice note (MAX_AUDIO_BYTES = 8 MB).
+		request_body {
+			max_size 10MB
+		}
 		reverse_proxy api:8000 {
 			# Keep SSE streams flowing without buffering.
 			flush_interval -1

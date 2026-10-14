@@ -11,6 +11,7 @@ from twin.channels.notify import HandoffEvent, SessionEndedEvent
 from twin.chat.service import ChatService
 from twin.db.models import ChatSession
 from twin.persona import Lang, Persona
+from twin.security.budget import BudgetGuard
 from twin.security.rate_limit import RateLimiter
 from twin.voice.speech import Speech, speakable
 
@@ -81,6 +82,7 @@ class WhatsAppChannel:
         debounce_seconds: float = 2.5,
         idle_hours: float = 12,
         limiter: RateLimiter | None = None,
+        budget: BudgetGuard | None = None,
     ) -> None:
         self.chat = chat
         self.persona = persona
@@ -89,6 +91,7 @@ class WhatsAppChannel:
         self.debounce_seconds = debounce_seconds
         self.idle = timedelta(hours=idle_hours)
         self.limiter = limiter or RateLimiter(8, 150)
+        self.budget = budget
         self._seen = _Seen()
         self._pending: dict[str, list[InboundMessage]] = defaultdict(list)
         self._timers: dict[str, asyncio.Task[None]] = {}
@@ -127,11 +130,22 @@ class WhatsAppChannel:
 
     async def _process(self, number: str, batch: list[InboundMessage]) -> None:
         lang = guess_lang(number)
+        # Limits are checked before any paid work (transcription, LLM).
+        audio_count = sum(1 for m in batch if m.is_audio)
+        if self.limiter.hit(number, cost=1 + audio_count) is not None:
+            if number not in self._warned:
+                self._warned.add(number)
+                await self.sender.send_text(number, self.persona.message("slow_down", lang))
+            return
+        self._warned.discard(number)
+        if self.budget is not None and await self.budget.exceeded():
+            await self.sender.send_text(number, self.persona.message("unavailable", lang))
+            return
+
         parts: list[str] = []
-        had_audio = False
+        had_audio = audio_count > 0
         for message in batch:
             if message.is_audio:
-                had_audio = True
                 text = await self._transcribe(message, lang)
                 if text:
                     parts.append(text)
@@ -141,13 +155,6 @@ class WhatsAppChannel:
             await self.sender.send_text(number, self.persona.message("audio_failed", lang))
             return
         text = "\n".join(parts).strip()
-
-        if self.limiter.hit(number) is not None:
-            if number not in self._warned:
-                self._warned.add(number)
-                await self.sender.send_text(number, self.persona.message("slow_down", lang))
-            return
-        self._warned.discard(number)
 
         command = text.lower().strip()
         session = await self._session_for(number, lang, greet=command not in RESET_COMMANDS)

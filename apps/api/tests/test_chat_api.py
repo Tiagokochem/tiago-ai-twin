@@ -18,8 +18,10 @@ from twin.config import Settings
 from twin.container import Container, build_container
 from twin.db.models import Base, ChatMessage, LLMCallRecord
 from twin.llm.gateway import LLMGateway
+from twin.llm.usage import LLMCall, UsageTracker
 from twin.main import create_app
 from twin.observability.metrics import collect_metrics
+from twin.security.rate_limit import RateLimiter
 
 DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 
@@ -68,7 +70,7 @@ async def container() -> AsyncIterator[Container]:
     settings = Settings(
         database_url=DATABASE_URL,
         admin_token=SecretStr("salt"),
-        rate_limit_per_minute=5,
+        rate_limit_per_minute=8,
         whatsapp_owner_number="5545999990000",
     )
     built = build_container(
@@ -172,7 +174,7 @@ async def test_unknown_session_and_rate_limit(client: httpx.AsyncClient) -> None
     )
     assert missing.status_code == 404
 
-    statuses = [(await client.post("/v1/sessions", json={})).status_code for _ in range(6)]
+    statuses = [(await client.post("/v1/sessions", json={})).status_code for _ in range(10)]
     assert statuses.count(429) >= 1
 
 
@@ -299,3 +301,25 @@ async def test_unexpected_failure_replies_and_repairs_the_thread(container: Cont
 
     state = await container.chat.graph.aget_state({"configurable": {"thread_id": str(session.id)}})
     assert [m.type for m in state.values["messages"]] == ["human", "ai", "human", "ai"]
+
+
+async def test_expensive_endpoints_cost_more_and_budget_breaker(
+    client: httpx.AsyncClient, container: Container
+) -> None:
+    session_id = (await client.post("/v1/sessions", json={"lang": "en"})).json()["session_id"]
+    for _ in range(3):  # 1 + 3 * 2 = 7 of 8 per minute
+        await client.post("/v1/voice/transcribe", files={"audio": ("q.webm", b"1", "audio/webm")})
+    limited = await client.post("/v1/voice/transcribe", files={"audio": ("q.webm", b"1")})
+    assert limited.status_code == 429 and "retry-after" in limited.headers
+
+    container.rate_limiter = RateLimiter(100, 1000)
+    container.budget.daily_usd = 0.5
+    await ask(client, session_id, "Tell me about Nuvartis")
+    tracker = UsageTracker()
+    tracker.calls.append(LLMCall("job_fit_assess", "openai", "gpt", 10, 1000, 100, 0.6, True))
+    await container.chat.record_usage(tracker, "job_fit")
+    container.budget._checked_at = float("-inf")
+    assert await container.budget.spent_today() == pytest.approx(0.6)
+    blocked = await client.post("/v1/chat", json={"session_id": session_id, "message": "more"})
+    assert blocked.status_code == 503
+    assert blocked.headers["x-request-id"]

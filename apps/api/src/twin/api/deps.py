@@ -1,4 +1,5 @@
 import secrets
+from collections.abc import Awaitable, Callable
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -24,19 +25,35 @@ def client_ip(request: Request) -> str:
 
 
 def client_hash(request: Request, container: ContainerDep) -> str:
-    salt = (
-        container.settings.admin_token.get_secret_value() if container.settings.admin_token else ""
-    )
-    return client_fingerprint(client_ip(request), salt or "twin")
+    settings = container.settings
+    secret = settings.ip_hash_secret or settings.admin_token
+    return client_fingerprint(client_ip(request), secret.get_secret_value() if secret else "twin")
 
 
-def rate_limited(request: Request, container: ContainerDep) -> None:
-    retry_after = container.rate_limiter.hit(client_hash(request, container))
-    if retry_after is not None:
+def rate_limit(cost: int = 1) -> Callable[[Request, Container], Awaitable[None]]:
+    """Per-client limit; expensive endpoints (LLM-heavy, speech) cost more."""
+
+    async def dependency(request: Request, container: ContainerDep) -> None:
+        retry_after = container.rate_limiter.hit(client_hash(request, container), cost)
+        if retry_after is not None:
+            raise HTTPException(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "too many requests",
+                headers={"Retry-After": str(int(retry_after) + 1)},
+            )
+
+    return dependency
+
+
+rate_limited = rate_limit(1)
+
+
+async def within_budget(container: ContainerDep) -> None:
+    if await container.budget.exceeded():
         raise HTTPException(
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            "too many requests",
-            headers={"Retry-After": str(int(retry_after) + 1)},
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "daily usage limit reached, please try again tomorrow",
+            headers={"Retry-After": "3600"},
         )
 
 

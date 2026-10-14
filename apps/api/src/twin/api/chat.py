@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from twin.agent.state import Lang
-from twin.api.deps import ContainerDep, client_hash, rate_limited
+from twin.api.deps import ContainerDep, client_hash, rate_limited, within_budget
 from twin.chat.service import (
     SessionBusyError,
     SessionEndedError,
@@ -164,7 +164,7 @@ async def delete_session(session_id: uuid.UUID, container: ContainerDep) -> None
     await container.chat.delete_session(session_id)
 
 
-@router.post("/chat", dependencies=[Depends(rate_limited)])
+@router.post("/chat", dependencies=[Depends(rate_limited), Depends(within_budget)])
 async def chat(body: ChatIn, container: ContainerDep) -> EventSourceResponse:
     text = body.message.strip()
     if not text:

@@ -16,6 +16,7 @@ from twin.llm.providers import build_providers
 from twin.persona import Persona, load_persona
 from twin.rag.embeddings import CachedEmbedder, Embedder, OpenAIEmbedder
 from twin.rag.retriever import HybridRetriever, Retriever
+from twin.security.budget import BudgetGuard
 from twin.security.rate_limit import RateLimiter
 from twin.voice.speech import Speech, build_speech
 
@@ -28,6 +29,7 @@ class Container:
     retriever: Retriever
     chat: ChatService
     rate_limiter: RateLimiter
+    budget: BudgetGuard
     job_fit: JobFitService
     speech: Speech | None
     whatsapp: WhatsAppChannel | None
@@ -78,6 +80,7 @@ def build_container(
     retriever = retriever or HybridRetriever(sessionmaker, build_embedder_or_none(settings))
     deps = AgentDeps(llm=gateway, retriever=retriever, persona=persona)
     graph = build_graph(deps, checkpointer)
+    budget = BudgetGuard(sessionmaker, settings.daily_budget_usd)
     chat = ChatService(
         graph,
         sessionmaker,
@@ -94,6 +97,7 @@ def build_container(
         retriever=retriever,
         chat=chat,
         rate_limiter=RateLimiter(settings.rate_limit_per_minute, settings.rate_limit_per_day),
+        budget=budget,
         job_fit=deps.job_fit or JobFitService(gateway, retriever, persona),
         speech=speech,
         whatsapp=(
@@ -102,6 +106,7 @@ def build_container(
                 persona,
                 sender,
                 speech,
+                budget=budget,
                 debounce_seconds=settings.whatsapp_debounce_seconds,
                 idle_hours=settings.whatsapp_session_idle_hours,
                 limiter=RateLimiter(

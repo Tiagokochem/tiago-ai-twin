@@ -206,7 +206,7 @@ Add the site to `EMBED_ORIGINS` in `.env`. Options: `data-locale`
 | POST | `/api/v1/job-fit` | Job description → cited fit report |
 | POST | `/api/v1/voice/transcribe` | Audio → text |
 | POST | `/api/v1/voice/speak` | Stored answer → MP3 stream |
-| POST | `/api/v1/channels/whatsapp?token=…` | Evolution API webhook |
+| POST | `/api/v1/channels/whatsapp` | Evolution API webhook (`X-Webhook-Token` header) |
 | POST | `/api/v1/admin/ingest` | Re-ingest the knowledge base (Bearer `ADMIN_TOKEN`) |
 | GET | `/api/v1/admin/metrics?days=7` | Usage, latency, cost, intents, providers (Bearer `ADMIN_TOKEN`) |
 

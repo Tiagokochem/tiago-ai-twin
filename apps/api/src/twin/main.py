@@ -16,6 +16,7 @@ from twin.config import Settings, get_settings
 from twin.container import Container, build_container
 from twin.db.session import get_engine, get_sessionmaker
 from twin.logging import configure_logging
+from twin.observability.requests import RequestContextMiddleware
 from twin.observability.tracing import build_callbacks
 
 log = structlog.get_logger()
@@ -77,7 +78,9 @@ def create_app(container: Container | None = None, settings: Settings | None = N
         allow_origins=settings.cors_origin_list,
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Authorization", "Content-Type", "X-Widget-Key"],
+        expose_headers=["X-Request-ID", "Retry-After"],
     )
+    app.add_middleware(RequestContextMiddleware)
     app.include_router(health.router)
     app.include_router(chat.router)
     app.include_router(job_fit.router)

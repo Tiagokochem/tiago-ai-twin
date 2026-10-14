@@ -34,6 +34,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     # Lets the API reach an Evolution API running on the same VPS outside this stack.
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -50,6 +54,10 @@ services:
         NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_WHATSAPP_BOT_NUMBER: ${WHATSAPP_BOT_NUMBER:-}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       - api
 
@@ -59,6 +67,12 @@ services:
     environment:
       PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
       EMBED_ORIGINS: ${EMBED_ORIGINS:-}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"

@@ -94,9 +94,14 @@ Configure the webhook for the instance (event `MESSAGES_UPSERT`):
 curl -X POST "$EVOLUTION_API_URL/webhook/set/$EVOLUTION_INSTANCE" \
   -H "apikey: $EVOLUTION_API_KEY" -H "Content-Type: application/json" \
   -d '{"webhook": {"enabled": true,
-        "url": "https://203-0-113-10.sslip.io/api/v1/channels/whatsapp?token=<EVOLUTION_WEBHOOK_TOKEN>",
+        "url": "https://203-0-113-10.sslip.io/api/v1/channels/whatsapp",
+        "headers": {"X-Webhook-Token": "<EVOLUTION_WEBHOOK_TOKEN>"},
         "events": ["MESSAGES_UPSERT"], "byEvents": false, "base64": true}}'
 ```
+
+If your Evolution version cannot send custom headers, append
+`?token=<EVOLUTION_WEBHOOK_TOKEN>` to the URL instead. The API never writes
+query strings to its access log. Events from any other instance are ignored.
 
 `base64: true` lets voice notes arrive inline; otherwise the API downloads
 them through Evolution. Restart the API after editing `.env`:

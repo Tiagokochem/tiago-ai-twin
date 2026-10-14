@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from twin.agent.state import Lang
-from twin.api.deps import ContainerDep, rate_limited
+from twin.api.deps import ContainerDep, rate_limit, within_budget
 from twin.chat.service import SessionNotFoundError
 from twin.voice.speech import Speech, speakable
 
@@ -35,7 +35,11 @@ def _speech(container: ContainerDep) -> Speech:
 SpeechDep = Annotated[Speech, Depends(_speech)]
 
 
-@router.post("/transcribe", response_model=TranscriptOut, dependencies=[Depends(rate_limited)])
+@router.post(
+    "/transcribe",
+    response_model=TranscriptOut,
+    dependencies=[Depends(rate_limit(cost=2)), Depends(within_budget)],
+)
 async def transcribe(
     container: ContainerDep,
     speech: SpeechDep,
@@ -56,7 +60,11 @@ async def transcribe(
     return TranscriptOut(text=text)
 
 
-@router.post("/speak", response_class=StreamingResponse)
+@router.post(
+    "/speak",
+    response_class=StreamingResponse,
+    dependencies=[Depends(rate_limit(cost=2)), Depends(within_budget)],
+)
 async def speak(body: SpeakIn, container: ContainerDep, speech: SpeechDep) -> StreamingResponse:
     """Speak a stored assistant answer. Only persisted answers can be voiced,
     so the endpoint cannot be used as a free text-to-speech proxy."""
