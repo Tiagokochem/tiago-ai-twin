@@ -1,0 +1,130 @@
+# Golden set for retrieval and answer evaluation.
+# expected_docs: knowledge document ids (without language prefix); a hit is
+#   any expected document among the top-k retrieved chunks.
+# facts: short strings the answer should contain (case-insensitive; any of
+#   the "|"-separated alternatives counts).
+cases:
+  - id: ai-experience
+    expected_docs: [experience, faq, skills, profile]
+    pt: {question: "Qual é a sua experiência com IA?", facts: ["RAG", "LangChain|LangGraph"]}
+    en: {question: "What is your experience with AI?", facts: ["RAG", "LangChain|LangGraph"]}
+
+  - id: langgraph
+    expected_docs: [skills, project-tiago-ai-twin, profile, project-insurance-quote-agent]
+    pt: {question: "Você já trabalhou com LangGraph?", facts: ["LangGraph"]}
+    en: {question: "Have you worked with LangGraph?", facts: ["LangGraph"]}
+
+  - id: rag-systems
+    expected_docs: [experience, skills, project-tiago-ai-twin, profile, faq]
+    pt: {question: "Você já construiu sistemas de RAG e busca semântica?", facts: ["embeddings|vetoria"]}
+    en: {question: "Have you built RAG or semantic search systems?", facts: ["embeddings|vector"]}
+
+  - id: laravel
+    expected_docs: [experience, profile, project-investment-management, skills]
+    pt: {question: "Qual é a sua experiência com Laravel?", facts: ["Laravel", "ShipSmart|Merlion|SISMETRO"]}
+    en: {question: "What is your experience with Laravel?", facts: ["Laravel", "ShipSmart|Merlion|SISMETRO"]}
+
+  - id: current-job
+    expected_docs: [experience]
+    pt: {question: "Onde você trabalha atualmente?", facts: ["ShipSmart"]}
+    en: {question: "Where do you currently work?", facts: ["ShipSmart"]}
+
+  - id: queues
+    expected_docs: [experience, skills]
+    pt: {question: "Você já trabalhou com filas como RabbitMQ e Redis?", facts: ["RabbitMQ"]}
+    en: {question: "Have you worked with queues like RabbitMQ and Redis?", facts: ["RabbitMQ"]}
+
+  - id: nuvartis
+    expected_docs: [project-nuvartis]
+    pt: {question: "O que é o Nuvartis?", facts: ["e-commerce"]}
+    en: {question: "What is Nuvartis?", facts: ["e-commerce"]}
+
+  - id: nuvartis-marketplaces
+    expected_docs: [project-nuvartis]
+    pt: {question: "Quais marketplaces a sua plataforma de e-commerce integra?", facts: ["Mercado Livre", "Shopee"]}
+    en: {question: "Which marketplaces does your e-commerce platform integrate with?", facts: ["Mercado Livre", "Shopee"]}
+
+  - id: devbrief
+    expected_docs: [project-devbrief]
+    pt: {question: "Me fale sobre o DevBrief.", facts: ["standup|daily"]}
+    en: {question: "Tell me about DevBrief.", facts: ["standup|daily"]}
+
+  - id: pwa
+    expected_docs: [project-devbrief]
+    pt: {question: "Você já fez um aplicativo PWA que funciona offline?", facts: ["DevBrief"]}
+    en: {question: "Have you built a PWA that works offline?", facts: ["DevBrief"]}
+
+  - id: whatsapp
+    expected_docs: [project-whatsapp-prospecting, project-insurance-quote-agent, skills]
+    pt: {question: "Você já desenvolveu soluções com WhatsApp?", facts: ["Evolution API|prospecção"]}
+    en: {question: "Have you built solutions on WhatsApp?", facts: ["Evolution API|prospecting"]}
+
+  - id: multi-tenant
+    expected_docs: [project-whatsapp-prospecting]
+    pt: {question: "Você já desenhou uma arquitetura multi-tenant?", facts: ["multi-tenant"]}
+    en: {question: "Have you designed a multi-tenant architecture?", facts: ["multi-tenant"]}
+
+  - id: idempotency
+    expected_docs: [project-investment-management]
+    pt: {question: "Como você evita que um resgate seja processado duas vezes?", facts: ["Idempotency-Key|idempot", "lock"]}
+    en: {question: "How do you prevent a withdrawal from being processed twice?", facts: ["Idempotency-Key|idempot", "lock"]}
+
+  - id: tests-ci
+    expected_docs: [project-investment-management, skills, project-tiago-ai-twin]
+    pt: {question: "Você escreve testes automatizados e usa CI?", facts: ["PHPUnit|CI|GitHub Actions"]}
+    en: {question: "Do you write automated tests and use CI?", facts: ["PHPUnit|CI|GitHub Actions"]}
+
+  - id: agent-handoff
+    expected_docs: [project-insurance-quote-agent, project-whatsapp-prospecting, project-tiago-ai-twin]
+    pt: {question: "Como o seu agente decide quando passar a conversa para um humano?", facts: ["humano|vendedor"]}
+    en: {question: "How does your agent decide when to hand the conversation to a human?", facts: ["human|salesperson"]}
+
+  - id: education
+    expected_docs: [education]
+    pt: {question: "Qual é a sua formação acadêmica?", facts: ["Análise e Desenvolvimento de Sistemas|pós-graduação"]}
+    en: {question: "What is your educational background?", facts: ["Systems|postgraduate"]}
+
+  - id: postgrad-ai
+    expected_docs: [education]
+    pt: {question: "Você tem especialização em inteligência artificial?", facts: ["Engenharia de IA Aplicada"]}
+    en: {question: "Do you have a specialization in artificial intelligence?", facts: ["Applied AI Engineering"]}
+
+  - id: aws
+    expected_docs: [education, skills]
+    pt: {question: "Você tem conhecimento ou curso de AWS?", facts: ["AWS"]}
+    en: {question: "Do you have AWS knowledge or training?", facts: ["AWS"]}
+
+  - id: mobile
+    expected_docs: [experience, skills]
+    pt: {question: "Você já desenvolveu aplicativos mobile?", facts: ["Flutter"]}
+    en: {question: "Have you developed mobile apps?", facts: ["Flutter"]}
+
+  - id: sismetro-results
+    expected_docs: [experience]
+    pt: {question: "Quais resultados você obteve na SISMETRO?", facts: ["30%"]}
+    en: {question: "What results did you achieve at SISMETRO?", facts: ["30%"]}
+
+  - id: ecommerce
+    expected_docs: [experience, profile, project-nuvartis]
+    pt: {question: "Qual é a sua experiência com e-commerce e marketplaces?", facts: ["DBestShop|VTEX|marketplaces"]}
+    en: {question: "What is your experience with e-commerce and marketplaces?", facts: ["DBestShop|VTEX|marketplaces"]}
+
+  - id: availability
+    expected_docs: [faq]
+    pt: {question: "Você está disponível para novas oportunidades?", facts: ["disponível"]}
+    en: {question: "Are you available for new opportunities?", facts: ["available"]}
+
+  - id: remote-timezone
+    expected_docs: [faq, profile]
+    pt: {question: "Você trabalha remoto? Qual é o seu fuso horário?", facts: ["UTC-3"]}
+    en: {question: "Do you work remotely? What is your time zone?", facts: ["UTC-3"]}
+
+  - id: frontend
+    expected_docs: [skills, experience]
+    pt: {question: "Quais frameworks de frontend você usa?", facts: ["Vue", "React"]}
+    en: {question: "Which frontend frameworks do you use?", facts: ["Vue", "React"]}
+
+  - id: this-assistant
+    expected_docs: [project-tiago-ai-twin]
+    pt: {question: "Como este assistente foi construído?", facts: ["LangGraph", "pgvector|RAG"]}
+    en: {question: "How was this assistant built?", facts: ["LangGraph", "pgvector|RAG"]}

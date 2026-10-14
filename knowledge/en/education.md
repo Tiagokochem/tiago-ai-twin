@@ -8,7 +8,7 @@ tags: [education, postgraduate, courses]
 
 ## Education
 
-- **Postgraduate specialization in Applied AI Engineering (UNIPDS, 2026):** focus on LLM applications, RAG, autonomous agents, prompt engineering and modern AI architectures.
+- **Postgraduate specialization in Applied AI Engineering (artificial intelligence; UNIPDS, 2026):** focus on LLM applications, RAG, autonomous agents, prompt engineering and modern AI architectures.
 - **Postgraduate specialization in Systems Development (Faculdade Focus, 2021 to 2022):** enterprise software development, systems architecture, data structures and relational databases.
 - **Software technology program (Gama Academy, 2022):** intensive training in Node.js, TypeScript, Sequelize, HTML5/CSS3, Git and agile methodologies (Scrum).
 - **Associate degree in Systems Analysis and Development (UniCesumar, 2019 to 2021):** programming logic, Java, JavaScript, database modeling and object-oriented programming.

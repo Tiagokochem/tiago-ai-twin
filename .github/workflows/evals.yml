@@ -1,0 +1,53 @@
+name: LLM evals
+
+# Full evaluation with real providers. Needs the OPENAI_API_KEY secret
+# (DEEPSEEK_API_KEY optional). Runs on demand and weekly.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Max golden cases for the answer eval (empty = all)"
+        required: false
+  schedule:
+    - cron: "0 9 * * 1"
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.RUN_SCHEDULED_EVALS == 'true' }}
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: twin
+          POSTGRES_PASSWORD: twin
+          POSTGRES_DB: twin
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U twin"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://twin:twin@localhost:5432/twin
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - run: uv run alembic upgrade head && uv run python -m twin.rag.ingest
+      - name: Retrieval eval (hybrid)
+        run: uv run python -m evals.retrieval --mode hybrid --min-hit 0.95
+      - name: Routing + answer eval
+        run: |
+          LIMIT="${{ github.event.inputs.limit }}"
+          uv run python -m evals.answers ${LIMIT:+--limit $LIMIT} --min-faithfulness 4.0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: llm-eval-reports
+          path: apps/api/evals/reports/

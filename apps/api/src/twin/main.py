@@ -13,6 +13,7 @@ from twin.config import Settings, get_settings
 from twin.container import Container, build_container
 from twin.db.session import get_engine, get_sessionmaker
 from twin.logging import configure_logging
+from twin.observability.tracing import build_callbacks
 
 
 def create_app(container: Container | None = None, settings: Settings | None = None) -> FastAPI:
@@ -34,7 +35,9 @@ def create_app(container: Container | None = None, settings: Settings | None = N
         ) as pool:
             checkpointer = AsyncPostgresSaver(pool)  # type: ignore[arg-type]
             await checkpointer.setup()
-            built = build_container(settings, get_sessionmaker(), checkpointer)
+            built = build_container(
+                settings, get_sessionmaker(), checkpointer, callbacks=build_callbacks(settings)
+            )
             app.state.container = built
             yield
             await built.chat.drain()

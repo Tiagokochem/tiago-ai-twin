@@ -16,9 +16,10 @@ Classify the LATEST user message, using the conversation for context.
 
 Intents:
 - about_tiago: anything about his experience, projects, skills, education, availability, \
-work model, languages, way of working, motivations, or why he fits a role.
+work model, languages, way of working, motivations, or why he fits a role. Questions about \
+how this assistant was built also count (it is one of his projects).
 - job_fit: the user pastes a job description or asks how he matches specific requirements.
-- smalltalk: greetings, thanks, goodbyes, or questions about this assistant itself.
+- smalltalk: greetings, thanks, goodbyes, small pleasantries.
 - handoff: topics only the real person should handle ({topics}), or an explicit request to \
 talk to the real {persona.short_name} / a human.
 - off_topic: unrelated to {persona.short_name} or to hiring him (general trivia, coding help, \

@@ -25,6 +25,11 @@ dependencies = [
     "sse-starlette>=2.1",
 ]
 
+[project.optional-dependencies]
+observability = [
+    "langfuse>=3",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8.3",

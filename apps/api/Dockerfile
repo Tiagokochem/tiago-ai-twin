@@ -10,12 +10,13 @@ ENV UV_COMPILE_BYTECODE=1 \
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --all-extras --no-install-project
 
 COPY README.md alembic.ini ./
 COPY migrations ./migrations
 COPY src ./src
-RUN uv sync --frozen --no-dev
+COPY evals ./evals
+RUN uv sync --frozen --no-dev --all-extras
 
 RUN useradd --create-home --uid 1000 twin
 USER twin

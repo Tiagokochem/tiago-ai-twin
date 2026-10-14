@@ -18,6 +18,7 @@ from twin.container import Container, build_container
 from twin.db.models import Base, ChatMessage, LLMCallRecord
 from twin.llm.gateway import LLMGateway
 from twin.main import create_app
+from twin.observability.metrics import collect_metrics
 
 DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 
@@ -171,6 +172,24 @@ async def test_unknown_session_and_rate_limit(client: httpx.AsyncClient) -> None
 
     statuses = [(await client.post("/v1/sessions", json={})).status_code for _ in range(6)]
     assert statuses.count(429) >= 1
+
+
+async def test_metrics_aggregate_turns_and_llm_calls(
+    client: httpx.AsyncClient, container: Container
+) -> None:
+    session_id = (await client.post("/v1/sessions", json={"lang": "en"})).json()["session_id"]
+    await ask(client, session_id, "Tell me about Nuvartis")
+    await ask(client, session_id, "What is your salary expectation?")
+
+    async with container.chat._sessionmaker() as db:
+        metrics = await collect_metrics(db, days=1)
+
+    assert metrics["overview"]["sessions"] == 1
+    assert metrics["turns"]["turns"] == 2 and metrics["turns"]["handoffs"] == 1
+    assert {i["intent"] for i in metrics["intents"]} == {"about_tiago", "handoff"}
+    nodes = {n["node"]: n for n in metrics["nodes"]}
+    assert nodes["answer"]["errors"] == 1  # the broken primary provider
+    assert any(p["fallback_successes"] > 0 for p in metrics["providers"])
 
 
 async def test_persona_endpoint(client: httpx.AsyncClient) -> None:

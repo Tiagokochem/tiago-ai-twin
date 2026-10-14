@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
 
+    # Optional Langfuse tracing (cloud or self-hosted)
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: SecretStr | None = None
+    langfuse_base_url: str = "https://cloud.langfuse.com"
+
     knowledge_dir: Path = REPO_ROOT / "knowledge"
     persona_path: Path = REPO_ROOT / "persona.yaml"
 
