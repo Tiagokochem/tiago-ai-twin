@@ -2,7 +2,7 @@
   "summary": {
     "intent_accuracy": 1.0,
     "full_accuracy": 1.0,
-    "prompt_version": "a135d1fb7a"
+    "prompt_version": "0b16042865"
   },
   "cases": [
     {
@@ -163,6 +163,30 @@
       "expected_reason": null,
       "got": "job_fit",
       "got_reason": "none",
+      "ok": true
+    },
+    {
+      "question": "Você aceita PJ e pode começar quando?",
+      "expected": "about_tiago",
+      "expected_reason": null,
+      "got": "about_tiago",
+      "got_reason": "none",
+      "ok": true
+    },
+    {
+      "question": "Are you open to relocation and to a contractor role?",
+      "expected": "about_tiago",
+      "expected_reason": null,
+      "got": "about_tiago",
+      "got_reason": "none",
+      "ok": true
+    },
+    {
+      "question": "Quanto você cobraria por hora como PJ?",
+      "expected": "handoff",
+      "expected_reason": "salary",
+      "got": "handoff",
+      "got_reason": "salary",
       "ok": true
     }
   ]

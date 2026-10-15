@@ -4,4 +4,4 @@
 |---|---|
 | intent_accuracy | 1.0 |
 | full_accuracy | 1.0 |
-| prompt_version | a135d1fb7a |
+| prompt_version | 0b16042865 |

@@ -45,7 +45,7 @@ known_names:
 # Topics the twin never answers on its own; it hands off to the real Tiago.
 handoff_topics:
   - salary expectations, rates or compensation
-  - contract terms or job offers
+  - negotiating rates, contract clauses or a concrete job offer
   - scheduling interviews or calls
   - personal or private information (family, address, documents)
 

@@ -28,3 +28,6 @@ cases:
       integrações com marketplaces, filas (RabbitMQ/Redis). Diferencial: IA aplicada.
       Como você se encaixa?
     intent: job_fit
+  - {question: "Você aceita PJ e pode começar quando?", intent: about_tiago}
+  - {question: "Are you open to relocation and to a contractor role?", intent: about_tiago}
+  - {question: "Quanto você cobraria por hora como PJ?", intent: handoff, reason: salary}
