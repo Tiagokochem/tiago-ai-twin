@@ -50,6 +50,31 @@ Migrations run automatically when the API container starts. Re-run the
 ingestion (or `POST /api/v1/admin/ingest` with the admin token) whenever you
 change `knowledge/`; unchanged documents are skipped.
 
+### Sharing the VPS with another reverse proxy
+
+If ports 80/443 already belong to another project's proxy, run in edge mode:
+this stack's Caddy keeps its routing and headers but publishes no ports and
+joins the proxy's Docker network (alias `tiago-ai-edge`).
+
+```bash
+# .env: EDGE_NETWORK=<proxy network>, PUBLIC_HOST=tiago-ai.203-0-113-10.sslip.io
+docker compose -f docker-compose.yml -f docker-compose.edge.yml up -d --build
+```
+
+Then add a site to the existing proxy and reload it (Caddy example):
+
+```caddyfile
+tiago-ai.203-0-113-10.sslip.io {
+	reverse_proxy tiago-ai-edge:80 {
+		flush_interval -1
+	}
+}
+```
+
+On a small VPS (1 vCPU), build the images elsewhere and ship them:
+`docker save tiago-ai-twin-api tiago-ai-twin-web | gzip | ssh <vps> 'gunzip | docker load'`,
+then `up -d --no-build`.
+
 ## 4. Embed on your site
 
 Replace your current WhatsApp button with:
