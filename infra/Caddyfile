@@ -1,3 +1,11 @@
+{
+	servers {
+		# Proxies allowed to set X-Forwarded-For. Public-facing by default;
+		# docker-compose.edge.yml sets private_ranges.
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1/32}
+	}
+}
+
 {$PUBLIC_HOST} {
 	encode zstd gzip
 

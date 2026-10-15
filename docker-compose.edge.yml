@@ -1,0 +1,31 @@
+# Run behind a reverse proxy that already owns ports 80/443 and TLS on the
+# same host (e.g. another project's Caddy). This stack's Caddy keeps the
+# routing, headers and widget rules, but serves plain HTTP on the proxy's
+# Docker network only:
+#
+#   EDGE_NETWORK=<proxy network> docker compose -f docker-compose.yml -f docker-compose.edge.yml up -d
+#
+# and in the edge proxy:
+#
+#   <host> {
+#       reverse_proxy tiago-ai-edge:80 {
+#           flush_interval -1
+#       }
+#   }
+services:
+  caddy:
+    ports: !reset []
+    environment:
+      PUBLIC_HOST: ":80"
+      # Keep the visitor's IP from the edge proxy's X-Forwarded-For; otherwise
+      # every visitor shares the edge proxy's IP and one rate-limit bucket.
+      TRUSTED_PROXIES: private_ranges
+    networks:
+      default:
+      edge:
+        aliases: [tiago-ai-edge]
+
+networks:
+  edge:
+    name: ${EDGE_NETWORK:?set EDGE_NETWORK to the edge proxy's Docker network}
+    external: true
