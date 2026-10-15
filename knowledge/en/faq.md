@@ -12,8 +12,7 @@ I'm available for new freelance projects and open to opportunities, especially A
 
 ## Work model
 
-I work remotely in my current positions and live in Brazil (UTC-3). I have experience collaborating with distributed teams. I accept both employment (CLT in Brazil) and contractor (PJ) arrangements.
-<!-- TODO(Tiago): relocation, travel and working-hour overlap with US/Europe. -->
+I work remotely in my current positions and live in Brazil (UTC-3). I have experience collaborating with distributed teams. I accept both employment (CLT in Brazil) and contractor (PJ) arrangements. I'm open to relocation and travel, and I can work across time zones, including overlapping hours with teams in the US and Europe.
 
 ## Languages
 

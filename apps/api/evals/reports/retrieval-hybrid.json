@@ -2,22 +2,22 @@
   "summary": {
     "mode": "hybrid",
     "top_k": 6,
-    "cases": 50,
-    "hit@1": 0.92,
+    "cases": 58,
+    "hit@1": 0.8621,
     "hit@3": 1.0,
     "hit@6": 1.0,
-    "mrr": 0.96,
+    "mrr": 0.9282,
     "pt": {
-      "hit@1": 0.92,
+      "hit@1": 0.8621,
       "hit@3": 1.0,
       "hit@6": 1.0,
-      "mrr": 0.96
+      "mrr": 0.931
     },
     "en": {
-      "hit@1": 0.92,
+      "hit@1": 0.8621,
       "hit@3": 1.0,
       "hit@6": 1.0,
-      "mrr": 0.96
+      "mrr": 0.9253
     }
   },
   "cases": [
@@ -28,11 +28,11 @@
       "rank": 1,
       "retrieved": [
         "faq",
-        "skills",
         "experience",
+        "project-other-projects",
+        "skills",
         "project-tiago-ai-twin",
-        "education",
-        "project-devbrief"
+        "education"
       ],
       "expected": [
         "experience",
@@ -49,10 +49,10 @@
       "retrieved": [
         "faq",
         "skills",
+        "project-other-projects",
         "experience",
         "project-tiago-ai-twin",
-        "faq",
-        "education"
+        "faq"
       ],
       "expected": [
         "experience",
@@ -65,19 +65,20 @@
       "id": "langgraph",
       "lang": "pt",
       "question": "Você já trabalhou com LangGraph?",
-      "rank": 1,
+      "rank": 2,
       "retrieved": [
+        "faq",
+        "project-other-projects",
         "profile",
-        "project-tiago-ai-twin",
-        "faq",
         "skills",
-        "faq",
-        "profile"
+        "experience",
+        "project-tiago-ai-twin"
       ],
       "expected": [
         "skills",
         "project-tiago-ai-twin",
-        "profile"
+        "profile",
+        "project-other-projects"
       ]
     },
     {
@@ -86,17 +87,18 @@
       "question": "Have you worked with LangGraph?",
       "rank": 1,
       "retrieved": [
+        "project-other-projects",
         "profile",
         "faq",
         "skills",
         "project-tiago-ai-twin",
-        "experience",
-        "project-devbrief"
+        "experience"
       ],
       "expected": [
         "skills",
         "project-tiago-ai-twin",
-        "profile"
+        "profile",
+        "project-other-projects"
       ]
     },
     {
@@ -130,8 +132,8 @@
         "profile",
         "faq",
         "project-tiago-ai-twin",
-        "education",
-        "project-tiago-ai-twin"
+        "project-other-projects",
+        "education"
       ],
       "expected": [
         "experience",
@@ -147,18 +149,19 @@
       "question": "Qual é a sua experiência com Laravel?",
       "rank": 1,
       "retrieved": [
+        "project-other-projects",
         "profile",
         "education",
         "faq",
         "project-investment-management",
-        "experience",
-        "experience"
+        "project-other-projects"
       ],
       "expected": [
         "experience",
         "profile",
         "project-investment-management",
-        "skills"
+        "skills",
+        "project-other-projects"
       ]
     },
     {
@@ -167,18 +170,19 @@
       "question": "What is your experience with Laravel?",
       "rank": 1,
       "retrieved": [
+        "project-other-projects",
         "experience",
         "profile",
-        "education",
         "experience",
         "project-investment-management",
-        "faq"
+        "education"
       ],
       "expected": [
         "experience",
         "profile",
         "project-investment-management",
-        "skills"
+        "skills",
+        "project-other-projects"
       ]
     },
     {
@@ -192,7 +196,7 @@
         "profile",
         "profile",
         "profile",
-        "experience"
+        "project-nuvartis"
       ],
       "expected": [
         "experience"
@@ -224,9 +228,9 @@
         "experience",
         "profile",
         "skills",
+        "project-other-projects",
         "project-insurance-quote-agent",
-        "faq",
-        "profile"
+        "faq"
       ],
       "expected": [
         "experience",
@@ -241,9 +245,9 @@
       "retrieved": [
         "experience",
         "skills",
+        "project-other-projects",
         "profile",
         "faq",
-        "profile",
         "faq"
       ],
       "expected": [
@@ -277,8 +281,8 @@
         "project-nuvartis",
         "project-nuvartis",
         "project-nuvartis",
-        "project-whatsapp-prospecting",
-        "experience",
+        "project-nuvartis",
+        "project-nuvartis",
         "project-whatsapp-prospecting"
       ],
       "expected": [
@@ -289,14 +293,14 @@
       "id": "nuvartis-marketplaces",
       "lang": "pt",
       "question": "Quais marketplaces a sua plataforma de e-commerce integra?",
-      "rank": 1,
+      "rank": 2,
       "retrieved": [
+        "project-other-projects",
         "project-nuvartis",
         "profile",
-        "skills",
         "project-nuvartis",
-        "experience",
-        "profile"
+        "skills",
+        "experience"
       ],
       "expected": [
         "project-nuvartis"
@@ -306,14 +310,14 @@
       "id": "nuvartis-marketplaces",
       "lang": "en",
       "question": "Which marketplaces does your e-commerce platform integrate with?",
-      "rank": 1,
+      "rank": 3,
       "retrieved": [
-        "project-nuvartis",
+        "project-other-projects",
         "skills",
+        "project-nuvartis",
         "profile",
-        "profile",
-        "experience",
-        "project-nuvartis"
+        "project-nuvartis",
+        "profile"
       ],
       "expected": [
         "project-nuvartis"
@@ -360,11 +364,11 @@
       "rank": 1,
       "retrieved": [
         "project-devbrief",
+        "project-other-projects",
         "faq",
+        "project-other-projects",
         "profile",
-        "experience",
-        "experience",
-        "project-whatsapp-prospecting"
+        "project-other-projects"
       ],
       "expected": [
         "project-devbrief"
@@ -377,11 +381,11 @@
       "rank": 1,
       "retrieved": [
         "project-devbrief",
+        "project-other-projects",
+        "experience",
         "project-devbrief",
-        "experience",
-        "experience",
-        "project-whatsapp-prospecting",
-        "faq"
+        "faq",
+        "project-whatsapp-prospecting"
       ],
       "expected": [
         "project-devbrief"
@@ -395,9 +399,9 @@
       "retrieved": [
         "profile",
         "project-whatsapp-prospecting",
-        "experience",
-        "faq",
         "project-whatsapp-prospecting",
+        "profile",
+        "experience",
         "experience"
       ],
       "expected": [
@@ -416,8 +420,8 @@
         "profile",
         "project-insurance-quote-agent",
         "project-whatsapp-prospecting",
-        "project-devbrief",
-        "skills"
+        "skills",
+        "faq"
       ],
       "expected": [
         "project-whatsapp-prospecting",
@@ -431,15 +435,16 @@
       "question": "Você já desenhou uma arquitetura multi-tenant?",
       "rank": 1,
       "retrieved": [
-        "project-whatsapp-prospecting",
-        "project-tiago-ai-twin",
         "project-nuvartis",
-        "education",
-        "project-investment-management",
-        "project-insurance-quote-agent"
+        "project-nuvartis",
+        "project-whatsapp-prospecting",
+        "project-nuvartis",
+        "project-tiago-ai-twin",
+        "project-other-projects"
       ],
       "expected": [
-        "project-whatsapp-prospecting"
+        "project-whatsapp-prospecting",
+        "project-nuvartis"
       ]
     },
     {
@@ -448,15 +453,16 @@
       "question": "Have you designed a multi-tenant architecture?",
       "rank": 1,
       "retrieved": [
-        "project-whatsapp-prospecting",
-        "project-tiago-ai-twin",
         "project-nuvartis",
-        "project-investment-management",
-        "education",
-        "project-tiago-ai-twin"
+        "project-nuvartis",
+        "project-whatsapp-prospecting",
+        "project-nuvartis",
+        "project-tiago-ai-twin",
+        "project-other-projects"
       ],
       "expected": [
-        "project-whatsapp-prospecting"
+        "project-whatsapp-prospecting",
+        "project-nuvartis"
       ]
     },
     {
@@ -470,7 +476,7 @@
         "project-investment-management",
         "experience",
         "profile",
-        "project-insurance-quote-agent"
+        "project-other-projects"
       ],
       "expected": [
         "project-investment-management"
@@ -487,7 +493,7 @@
         "project-insurance-quote-agent",
         "profile",
         "project-whatsapp-prospecting",
-        "experience"
+        "project-nuvartis"
       ],
       "expected": [
         "project-investment-management"
@@ -500,16 +506,17 @@
       "rank": 1,
       "retrieved": [
         "project-tiago-ai-twin",
+        "project-other-projects",
         "project-investment-management",
+        "project-other-projects",
         "project-devbrief",
-        "profile",
-        "project-investment-management",
-        "faq"
+        "profile"
       ],
       "expected": [
         "project-investment-management",
         "skills",
-        "project-tiago-ai-twin"
+        "project-tiago-ai-twin",
+        "project-other-projects"
       ]
     },
     {
@@ -520,15 +527,16 @@
       "retrieved": [
         "project-tiago-ai-twin",
         "profile",
+        "project-other-projects",
         "skills",
-        "project-devbrief",
-        "project-investment-management",
-        "faq"
+        "project-other-projects",
+        "project-investment-management"
       ],
       "expected": [
         "project-investment-management",
         "skills",
-        "project-tiago-ai-twin"
+        "project-tiago-ai-twin",
+        "project-other-projects"
       ]
     },
     {
@@ -539,9 +547,9 @@
       "retrieved": [
         "project-insurance-quote-agent",
         "faq",
-        "project-tiago-ai-twin",
         "project-insurance-quote-agent",
-        "project-whatsapp-prospecting",
+        "project-other-projects",
+        "project-tiago-ai-twin",
         "skills"
       ],
       "expected": [
@@ -557,11 +565,11 @@
       "rank": 1,
       "retrieved": [
         "project-insurance-quote-agent",
-        "faq",
-        "project-whatsapp-prospecting",
-        "faq",
+        "project-other-projects",
         "project-insurance-quote-agent",
-        "project-insurance-quote-agent"
+        "project-whatsapp-prospecting",
+        "project-insurance-quote-agent",
+        "faq"
       ],
       "expected": [
         "project-insurance-quote-agent",
@@ -578,9 +586,9 @@
         "education",
         "faq",
         "education",
-        "project-tiago-ai-twin",
+        "project-other-projects",
         "profile",
-        "profile"
+        "project-tiago-ai-twin"
       ],
       "expected": [
         "education"
@@ -647,8 +655,8 @@
         "skills",
         "faq",
         "experience",
-        "education",
-        "skills"
+        "project-other-projects",
+        "education"
       ],
       "expected": [
         "education",
@@ -665,7 +673,7 @@
         "skills",
         "experience",
         "education",
-        "skills",
+        "project-other-projects",
         "skills"
       ],
       "expected": [
@@ -679,12 +687,12 @@
       "question": "Você já desenvolveu aplicativos mobile?",
       "rank": 1,
       "retrieved": [
-        "experience",
-        "experience",
         "skills",
-        "profile",
         "experience",
-        "experience"
+        "experience",
+        "experience",
+        "profile",
+        "project-other-projects"
       ],
       "expected": [
         "experience",
@@ -698,11 +706,11 @@
       "rank": 1,
       "retrieved": [
         "experience",
-        "experience",
-        "experience",
         "skills",
         "experience",
-        "project-devbrief"
+        "experience",
+        "experience",
+        "project-other-projects"
       ],
       "expected": [
         "experience",
@@ -718,9 +726,9 @@
         "experience",
         "project-insurance-quote-agent",
         "project-tiago-ai-twin",
+        "project-other-projects",
         "experience",
-        "education",
-        "experience"
+        "education"
       ],
       "expected": [
         "experience"
@@ -734,10 +742,10 @@
       "retrieved": [
         "experience",
         "project-tiago-ai-twin",
+        "project-other-projects",
         "experience",
         "experience",
-        "education",
-        "experience"
+        "education"
       ],
       "expected": [
         "experience"
@@ -752,9 +760,9 @@
         "profile",
         "skills",
         "experience",
-        "project-nuvartis",
         "experience",
-        "faq"
+        "project-nuvartis",
+        "project-nuvartis"
       ],
       "expected": [
         "experience",
@@ -805,10 +813,10 @@
       "rank": 1,
       "retrieved": [
         "faq",
-        "profile",
-        "project-devbrief",
-        "experience",
         "faq",
+        "project-devbrief",
+        "profile",
+        "experience",
         "experience"
       ],
       "expected": [
@@ -826,7 +834,7 @@
         "experience",
         "experience",
         "experience",
-        "profile"
+        "experience"
       ],
       "expected": [
         "faq",
@@ -842,8 +850,8 @@
         "faq",
         "experience",
         "experience",
-        "profile",
         "experience",
+        "profile",
         "experience"
       ],
       "expected": [
@@ -858,10 +866,10 @@
       "rank": 1,
       "retrieved": [
         "experience",
+        "project-other-projects",
+        "project-other-projects",
         "project-tiago-ai-twin",
-        "skills",
-        "project-insurance-quote-agent",
-        "profile",
+        "project-other-projects",
         "skills"
       ],
       "expected": [
@@ -873,14 +881,14 @@
       "id": "frontend",
       "lang": "en",
       "question": "Which frontend frameworks do you use?",
-      "rank": 1,
+      "rank": 2,
       "retrieved": [
+        "project-other-projects",
         "experience",
+        "project-other-projects",
+        "project-other-projects",
         "profile",
-        "project-tiago-ai-twin",
-        "skills",
-        "skills",
-        "project-investment-management"
+        "project-tiago-ai-twin"
       ],
       "expected": [
         "skills",
@@ -894,11 +902,11 @@
       "rank": 1,
       "retrieved": [
         "project-tiago-ai-twin",
+        "project-other-projects",
         "experience",
         "project-tiago-ai-twin",
         "faq",
-        "project-tiago-ai-twin",
-        "faq"
+        "project-tiago-ai-twin"
       ],
       "expected": [
         "project-tiago-ai-twin"
@@ -911,14 +919,152 @@
       "rank": 1,
       "retrieved": [
         "project-tiago-ai-twin",
+        "project-other-projects",
         "project-devbrief",
         "project-devbrief",
         "faq",
-        "experience",
-        "project-tiago-ai-twin"
+        "experience"
       ],
       "expected": [
         "project-tiago-ai-twin"
+      ]
+    },
+    {
+      "id": "mcp",
+      "lang": "pt",
+      "question": "Você já usou Model Context Protocol (MCP) em algum agente?",
+      "rank": 1,
+      "retrieved": [
+        "project-other-projects",
+        "project-insurance-quote-agent",
+        "experience",
+        "project-insurance-quote-agent",
+        "experience",
+        "skills"
+      ],
+      "expected": [
+        "project-other-projects"
+      ]
+    },
+    {
+      "id": "mcp",
+      "lang": "en",
+      "question": "Have you used the Model Context Protocol (MCP) in an agent?",
+      "rank": 1,
+      "retrieved": [
+        "project-other-projects",
+        "project-insurance-quote-agent",
+        "project-tiago-ai-twin",
+        "faq",
+        "project-insurance-quote-agent",
+        "faq"
+      ],
+      "expected": [
+        "project-other-projects"
+      ]
+    },
+    {
+      "id": "golang",
+      "lang": "pt",
+      "question": "Você tem algum projeto em Go?",
+      "rank": 1,
+      "retrieved": [
+        "project-other-projects",
+        "project-other-projects",
+        "project-other-projects",
+        "experience",
+        "project-other-projects",
+        "skills"
+      ],
+      "expected": [
+        "project-other-projects",
+        "skills"
+      ]
+    },
+    {
+      "id": "golang",
+      "lang": "en",
+      "question": "Do you have any project written in Go?",
+      "rank": 1,
+      "retrieved": [
+        "project-other-projects",
+        "project-other-projects",
+        "project-other-projects",
+        "project-other-projects",
+        "skills",
+        "project-tiago-ai-twin"
+      ],
+      "expected": [
+        "project-other-projects",
+        "skills"
+      ]
+    },
+    {
+      "id": "nuvartis-stage",
+      "lang": "pt",
+      "question": "O Nuvartis já tem clientes?",
+      "rank": 1,
+      "retrieved": [
+        "project-nuvartis",
+        "project-nuvartis",
+        "experience",
+        "project-nuvartis",
+        "project-nuvartis",
+        "experience"
+      ],
+      "expected": [
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "nuvartis-stage",
+      "lang": "en",
+      "question": "Does Nuvartis already have customers?",
+      "rank": 1,
+      "retrieved": [
+        "project-nuvartis",
+        "experience",
+        "project-nuvartis",
+        "profile",
+        "project-nuvartis",
+        "experience"
+      ],
+      "expected": [
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "relocation",
+      "lang": "pt",
+      "question": "Você aceitaria se mudar ou trabalhar no fuso dos EUA?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "profile",
+        "experience",
+        "profile",
+        "faq",
+        "faq"
+      ],
+      "expected": [
+        "faq"
+      ]
+    },
+    {
+      "id": "relocation",
+      "lang": "en",
+      "question": "Would you relocate or work US hours?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "profile",
+        "experience",
+        "project-whatsapp-prospecting",
+        "project-whatsapp-prospecting",
+        "faq"
+      ],
+      "expected": [
+        "faq"
       ]
     }
   ]

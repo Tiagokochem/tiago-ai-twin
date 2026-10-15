@@ -12,8 +12,7 @@ Estou disponível para novos projetos freelance e aberto a oportunidades, com in
 
 ## Modelo de trabalho
 
-Trabalho de forma remota nas minhas posições atuais e moro no Brasil (fuso UTC-3). Tenho experiência colaborando com times distribuídos. Aceito contratação CLT ou PJ (contractor).
-<!-- TODO(Tiago): relocação, viagens e sobreposição de horário com EUA/Europa. -->
+Trabalho de forma remota nas minhas posições atuais e moro no Brasil (fuso UTC-3). Tenho experiência colaborando com times distribuídos. Aceito contratação CLT ou PJ (contractor). Estou aberto a mudança de cidade ou país e a viagens, e consigo trabalhar em fusos horários diferentes, inclusive com sobreposição de horário com times nos EUA e na Europa.
 
 ## Idiomas
 

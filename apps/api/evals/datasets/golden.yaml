@@ -10,7 +10,7 @@ cases:
     en: {question: "What is your experience with AI?", facts: ["RAG", "LangChain|LangGraph"]}
 
   - id: langgraph
-    expected_docs: [skills, project-tiago-ai-twin, profile]
+    expected_docs: [skills, project-tiago-ai-twin, profile, project-other-projects]
     pt: {question: "Você já trabalhou com LangGraph?", facts: ["LangGraph"]}
     en: {question: "Have you worked with LangGraph?", facts: ["LangGraph"]}
 
@@ -20,7 +20,7 @@ cases:
     en: {question: "Have you built RAG or semantic search systems?", facts: ["embeddings|vector"]}
 
   - id: laravel
-    expected_docs: [experience, profile, project-investment-management, skills]
+    expected_docs: [experience, profile, project-investment-management, skills, project-other-projects]
     pt: {question: "Qual é a sua experiência com Laravel?", facts: ["Laravel", "ShipSmart|Merlion|SISMETRO"]}
     en: {question: "What is your experience with Laravel?", facts: ["Laravel", "ShipSmart|Merlion|SISMETRO"]}
 
@@ -60,7 +60,7 @@ cases:
     en: {question: "Have you built solutions on WhatsApp?", facts: ["Evolution API|prospecting"]}
 
   - id: multi-tenant
-    expected_docs: [project-whatsapp-prospecting]
+    expected_docs: [project-whatsapp-prospecting, project-nuvartis]
     pt: {question: "Você já desenhou uma arquitetura multi-tenant?", facts: ["multi-tenant"]}
     en: {question: "Have you designed a multi-tenant architecture?", facts: ["multi-tenant"]}
 
@@ -70,7 +70,7 @@ cases:
     en: {question: "How do you prevent a withdrawal from being processed twice?", facts: ["Idempotency-Key|idempot", "lock"]}
 
   - id: tests-ci
-    expected_docs: [project-investment-management, skills, project-tiago-ai-twin]
+    expected_docs: [project-investment-management, skills, project-tiago-ai-twin, project-other-projects]
     pt: {question: "Você escreve testes automatizados e usa CI?", facts: ["PHPUnit|CI|GitHub Actions"]}
     en: {question: "Do you write automated tests and use CI?", facts: ["PHPUnit|CI|GitHub Actions"]}
 
@@ -128,3 +128,23 @@ cases:
     expected_docs: [project-tiago-ai-twin]
     pt: {question: "Como este assistente foi construído?", facts: ["LangGraph", "pgvector|RAG"]}
     en: {question: "How was this assistant built?", facts: ["LangGraph", "pgvector|RAG"]}
+
+  - id: mcp
+    expected_docs: [project-other-projects]
+    pt: {question: "Você já usou Model Context Protocol (MCP) em algum agente?", facts: ["MCP", "filesystem|MongoDB"]}
+    en: {question: "Have you used the Model Context Protocol (MCP) in an agent?", facts: ["MCP", "filesystem|MongoDB"]}
+
+  - id: golang
+    expected_docs: [project-other-projects, skills]
+    pt: {question: "Você tem algum projeto em Go?", facts: ["Code Reviewer|code review"]}
+    en: {question: "Do you have any project written in Go?", facts: ["Code Reviewer|code review"]}
+
+  - id: nuvartis-stage
+    expected_docs: [project-nuvartis]
+    pt: {question: "O Nuvartis já tem clientes?", facts: ["loja real|testad"]}
+    en: {question: "Does Nuvartis already have customers?", facts: ["real store|test"]}
+
+  - id: relocation
+    expected_docs: [faq]
+    pt: {question: "Você aceitaria se mudar ou trabalhar no fuso dos EUA?", facts: ["mudança|mudar", "fuso"]}
+    en: {question: "Would you relocate or work US hours?", facts: ["relocat", "time zone|hours"]}
