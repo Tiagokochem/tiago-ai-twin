@@ -4,6 +4,12 @@ from twin.agent import context
 from twin.agent.deps import AgentDeps, Node, emit
 from twin.agent.schemas import Analysis
 from twin.agent.state import TwinState
+from twin.llm.providers import Tier
+
+# Routing decides whether a recruiter gets an answer at all. On the red-team
+# and routing evals the fast tier refused legitimate questions ("How do you
+# prevent a withdrawal from being processed twice?") as off-topic.
+ROUTER_TIER: Tier = "answer"
 
 
 def make_analyze(deps: AgentDeps) -> Node:
@@ -19,6 +25,7 @@ def make_analyze(deps: AgentDeps) -> Node:
                 *context.history(state.get("messages", []), deps.router_history_tokens),
             ],
             Analysis,
+            tier=ROUTER_TIER,
             prompt=prompt.ref,
         )
         handoff_reason = None

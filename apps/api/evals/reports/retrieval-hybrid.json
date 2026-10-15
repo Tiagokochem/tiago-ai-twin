@@ -1,0 +1,925 @@
+{
+  "summary": {
+    "mode": "hybrid",
+    "top_k": 6,
+    "cases": 50,
+    "hit@1": 0.92,
+    "hit@3": 1.0,
+    "hit@6": 1.0,
+    "mrr": 0.96,
+    "pt": {
+      "hit@1": 0.92,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.96
+    },
+    "en": {
+      "hit@1": 0.92,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.96
+    }
+  },
+  "cases": [
+    {
+      "id": "ai-experience",
+      "lang": "pt",
+      "question": "Qual é a sua experiência com IA?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "skills",
+        "experience",
+        "project-tiago-ai-twin",
+        "education",
+        "project-devbrief"
+      ],
+      "expected": [
+        "experience",
+        "faq",
+        "skills",
+        "profile"
+      ]
+    },
+    {
+      "id": "ai-experience",
+      "lang": "en",
+      "question": "What is your experience with AI?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "skills",
+        "experience",
+        "project-tiago-ai-twin",
+        "faq",
+        "education"
+      ],
+      "expected": [
+        "experience",
+        "faq",
+        "skills",
+        "profile"
+      ]
+    },
+    {
+      "id": "langgraph",
+      "lang": "pt",
+      "question": "Você já trabalhou com LangGraph?",
+      "rank": 1,
+      "retrieved": [
+        "profile",
+        "project-tiago-ai-twin",
+        "faq",
+        "skills",
+        "faq",
+        "profile"
+      ],
+      "expected": [
+        "skills",
+        "project-tiago-ai-twin",
+        "profile"
+      ]
+    },
+    {
+      "id": "langgraph",
+      "lang": "en",
+      "question": "Have you worked with LangGraph?",
+      "rank": 1,
+      "retrieved": [
+        "profile",
+        "faq",
+        "skills",
+        "project-tiago-ai-twin",
+        "experience",
+        "project-devbrief"
+      ],
+      "expected": [
+        "skills",
+        "project-tiago-ai-twin",
+        "profile"
+      ]
+    },
+    {
+      "id": "rag-systems",
+      "lang": "pt",
+      "question": "Você já construiu sistemas de RAG e busca semântica?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "experience",
+        "skills",
+        "profile",
+        "project-tiago-ai-twin",
+        "project-tiago-ai-twin"
+      ],
+      "expected": [
+        "experience",
+        "skills",
+        "project-tiago-ai-twin",
+        "profile",
+        "faq"
+      ]
+    },
+    {
+      "id": "rag-systems",
+      "lang": "en",
+      "question": "Have you built RAG or semantic search systems?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "profile",
+        "faq",
+        "project-tiago-ai-twin",
+        "education",
+        "project-tiago-ai-twin"
+      ],
+      "expected": [
+        "experience",
+        "skills",
+        "project-tiago-ai-twin",
+        "profile",
+        "faq"
+      ]
+    },
+    {
+      "id": "laravel",
+      "lang": "pt",
+      "question": "Qual é a sua experiência com Laravel?",
+      "rank": 1,
+      "retrieved": [
+        "profile",
+        "education",
+        "faq",
+        "project-investment-management",
+        "experience",
+        "experience"
+      ],
+      "expected": [
+        "experience",
+        "profile",
+        "project-investment-management",
+        "skills"
+      ]
+    },
+    {
+      "id": "laravel",
+      "lang": "en",
+      "question": "What is your experience with Laravel?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "profile",
+        "education",
+        "experience",
+        "project-investment-management",
+        "faq"
+      ],
+      "expected": [
+        "experience",
+        "profile",
+        "project-investment-management",
+        "skills"
+      ]
+    },
+    {
+      "id": "current-job",
+      "lang": "pt",
+      "question": "Onde você trabalha atualmente?",
+      "rank": 2,
+      "retrieved": [
+        "faq",
+        "experience",
+        "profile",
+        "profile",
+        "profile",
+        "experience"
+      ],
+      "expected": [
+        "experience"
+      ]
+    },
+    {
+      "id": "current-job",
+      "lang": "en",
+      "question": "Where do you currently work?",
+      "rank": 2,
+      "retrieved": [
+        "faq",
+        "experience",
+        "profile",
+        "profile",
+        "project-whatsapp-prospecting",
+        "experience"
+      ],
+      "expected": [
+        "experience"
+      ]
+    },
+    {
+      "id": "queues",
+      "lang": "pt",
+      "question": "Você já trabalhou com filas como RabbitMQ e Redis?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "profile",
+        "skills",
+        "project-insurance-quote-agent",
+        "faq",
+        "profile"
+      ],
+      "expected": [
+        "experience",
+        "skills"
+      ]
+    },
+    {
+      "id": "queues",
+      "lang": "en",
+      "question": "Have you worked with queues like RabbitMQ and Redis?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "skills",
+        "profile",
+        "faq",
+        "profile",
+        "faq"
+      ],
+      "expected": [
+        "experience",
+        "skills"
+      ]
+    },
+    {
+      "id": "nuvartis",
+      "lang": "pt",
+      "question": "O que é o Nuvartis?",
+      "rank": 1,
+      "retrieved": [
+        "project-nuvartis",
+        "project-tiago-ai-twin",
+        "project-insurance-quote-agent",
+        "project-devbrief",
+        "project-whatsapp-prospecting",
+        "project-nuvartis"
+      ],
+      "expected": [
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "nuvartis",
+      "lang": "en",
+      "question": "What is Nuvartis?",
+      "rank": 1,
+      "retrieved": [
+        "project-nuvartis",
+        "project-nuvartis",
+        "project-nuvartis",
+        "project-whatsapp-prospecting",
+        "experience",
+        "project-whatsapp-prospecting"
+      ],
+      "expected": [
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "nuvartis-marketplaces",
+      "lang": "pt",
+      "question": "Quais marketplaces a sua plataforma de e-commerce integra?",
+      "rank": 1,
+      "retrieved": [
+        "project-nuvartis",
+        "profile",
+        "skills",
+        "project-nuvartis",
+        "experience",
+        "profile"
+      ],
+      "expected": [
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "nuvartis-marketplaces",
+      "lang": "en",
+      "question": "Which marketplaces does your e-commerce platform integrate with?",
+      "rank": 1,
+      "retrieved": [
+        "project-nuvartis",
+        "skills",
+        "profile",
+        "profile",
+        "experience",
+        "project-nuvartis"
+      ],
+      "expected": [
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "devbrief",
+      "lang": "pt",
+      "question": "Me fale sobre o DevBrief.",
+      "rank": 1,
+      "retrieved": [
+        "project-devbrief",
+        "faq",
+        "project-devbrief",
+        "profile",
+        "project-whatsapp-prospecting",
+        "experience"
+      ],
+      "expected": [
+        "project-devbrief"
+      ]
+    },
+    {
+      "id": "devbrief",
+      "lang": "en",
+      "question": "Tell me about DevBrief.",
+      "rank": 1,
+      "retrieved": [
+        "project-devbrief",
+        "project-devbrief",
+        "project-whatsapp-prospecting",
+        "experience",
+        "profile",
+        "project-whatsapp-prospecting"
+      ],
+      "expected": [
+        "project-devbrief"
+      ]
+    },
+    {
+      "id": "pwa",
+      "lang": "pt",
+      "question": "Você já fez um aplicativo PWA que funciona offline?",
+      "rank": 1,
+      "retrieved": [
+        "project-devbrief",
+        "faq",
+        "profile",
+        "experience",
+        "experience",
+        "project-whatsapp-prospecting"
+      ],
+      "expected": [
+        "project-devbrief"
+      ]
+    },
+    {
+      "id": "pwa",
+      "lang": "en",
+      "question": "Have you built a PWA that works offline?",
+      "rank": 1,
+      "retrieved": [
+        "project-devbrief",
+        "project-devbrief",
+        "experience",
+        "experience",
+        "project-whatsapp-prospecting",
+        "faq"
+      ],
+      "expected": [
+        "project-devbrief"
+      ]
+    },
+    {
+      "id": "whatsapp",
+      "lang": "pt",
+      "question": "Você já desenvolveu soluções com WhatsApp?",
+      "rank": 2,
+      "retrieved": [
+        "profile",
+        "project-whatsapp-prospecting",
+        "experience",
+        "faq",
+        "project-whatsapp-prospecting",
+        "experience"
+      ],
+      "expected": [
+        "project-whatsapp-prospecting",
+        "project-insurance-quote-agent",
+        "skills"
+      ]
+    },
+    {
+      "id": "whatsapp",
+      "lang": "en",
+      "question": "Have you built solutions on WhatsApp?",
+      "rank": 1,
+      "retrieved": [
+        "project-whatsapp-prospecting",
+        "profile",
+        "project-insurance-quote-agent",
+        "project-whatsapp-prospecting",
+        "project-devbrief",
+        "skills"
+      ],
+      "expected": [
+        "project-whatsapp-prospecting",
+        "project-insurance-quote-agent",
+        "skills"
+      ]
+    },
+    {
+      "id": "multi-tenant",
+      "lang": "pt",
+      "question": "Você já desenhou uma arquitetura multi-tenant?",
+      "rank": 1,
+      "retrieved": [
+        "project-whatsapp-prospecting",
+        "project-tiago-ai-twin",
+        "project-nuvartis",
+        "education",
+        "project-investment-management",
+        "project-insurance-quote-agent"
+      ],
+      "expected": [
+        "project-whatsapp-prospecting"
+      ]
+    },
+    {
+      "id": "multi-tenant",
+      "lang": "en",
+      "question": "Have you designed a multi-tenant architecture?",
+      "rank": 1,
+      "retrieved": [
+        "project-whatsapp-prospecting",
+        "project-tiago-ai-twin",
+        "project-nuvartis",
+        "project-investment-management",
+        "education",
+        "project-tiago-ai-twin"
+      ],
+      "expected": [
+        "project-whatsapp-prospecting"
+      ]
+    },
+    {
+      "id": "idempotency",
+      "lang": "pt",
+      "question": "Como você evita que um resgate seja processado duas vezes?",
+      "rank": 1,
+      "retrieved": [
+        "project-investment-management",
+        "project-insurance-quote-agent",
+        "project-investment-management",
+        "experience",
+        "profile",
+        "project-insurance-quote-agent"
+      ],
+      "expected": [
+        "project-investment-management"
+      ]
+    },
+    {
+      "id": "idempotency",
+      "lang": "en",
+      "question": "How do you prevent a withdrawal from being processed twice?",
+      "rank": 1,
+      "retrieved": [
+        "project-investment-management",
+        "project-investment-management",
+        "project-insurance-quote-agent",
+        "profile",
+        "project-whatsapp-prospecting",
+        "experience"
+      ],
+      "expected": [
+        "project-investment-management"
+      ]
+    },
+    {
+      "id": "tests-ci",
+      "lang": "pt",
+      "question": "Você escreve testes automatizados e usa CI?",
+      "rank": 1,
+      "retrieved": [
+        "project-tiago-ai-twin",
+        "project-investment-management",
+        "project-devbrief",
+        "profile",
+        "project-investment-management",
+        "faq"
+      ],
+      "expected": [
+        "project-investment-management",
+        "skills",
+        "project-tiago-ai-twin"
+      ]
+    },
+    {
+      "id": "tests-ci",
+      "lang": "en",
+      "question": "Do you write automated tests and use CI?",
+      "rank": 1,
+      "retrieved": [
+        "project-tiago-ai-twin",
+        "profile",
+        "skills",
+        "project-devbrief",
+        "project-investment-management",
+        "faq"
+      ],
+      "expected": [
+        "project-investment-management",
+        "skills",
+        "project-tiago-ai-twin"
+      ]
+    },
+    {
+      "id": "agent-handoff",
+      "lang": "pt",
+      "question": "Como o seu agente decide quando passar a conversa para um humano?",
+      "rank": 1,
+      "retrieved": [
+        "project-insurance-quote-agent",
+        "faq",
+        "project-tiago-ai-twin",
+        "project-insurance-quote-agent",
+        "project-whatsapp-prospecting",
+        "skills"
+      ],
+      "expected": [
+        "project-insurance-quote-agent",
+        "project-whatsapp-prospecting",
+        "project-tiago-ai-twin"
+      ]
+    },
+    {
+      "id": "agent-handoff",
+      "lang": "en",
+      "question": "How does your agent decide when to hand the conversation to a human?",
+      "rank": 1,
+      "retrieved": [
+        "project-insurance-quote-agent",
+        "faq",
+        "project-whatsapp-prospecting",
+        "faq",
+        "project-insurance-quote-agent",
+        "project-insurance-quote-agent"
+      ],
+      "expected": [
+        "project-insurance-quote-agent",
+        "project-whatsapp-prospecting",
+        "project-tiago-ai-twin"
+      ]
+    },
+    {
+      "id": "education",
+      "lang": "pt",
+      "question": "Qual é a sua formação acadêmica?",
+      "rank": 1,
+      "retrieved": [
+        "education",
+        "faq",
+        "education",
+        "project-tiago-ai-twin",
+        "profile",
+        "profile"
+      ],
+      "expected": [
+        "education"
+      ]
+    },
+    {
+      "id": "education",
+      "lang": "en",
+      "question": "What is your educational background?",
+      "rank": 1,
+      "retrieved": [
+        "education",
+        "profile",
+        "project-nuvartis",
+        "profile",
+        "education",
+        "profile"
+      ],
+      "expected": [
+        "education"
+      ]
+    },
+    {
+      "id": "postgrad-ai",
+      "lang": "pt",
+      "question": "Você tem especialização em inteligência artificial?",
+      "rank": 1,
+      "retrieved": [
+        "education",
+        "profile",
+        "faq",
+        "experience",
+        "skills",
+        "faq"
+      ],
+      "expected": [
+        "education"
+      ]
+    },
+    {
+      "id": "postgrad-ai",
+      "lang": "en",
+      "question": "Do you have a specialization in artificial intelligence?",
+      "rank": 1,
+      "retrieved": [
+        "education",
+        "faq",
+        "profile",
+        "skills",
+        "experience",
+        "profile"
+      ],
+      "expected": [
+        "education"
+      ]
+    },
+    {
+      "id": "aws",
+      "lang": "pt",
+      "question": "Você tem conhecimento ou curso de AWS?",
+      "rank": 1,
+      "retrieved": [
+        "education",
+        "skills",
+        "faq",
+        "experience",
+        "education",
+        "skills"
+      ],
+      "expected": [
+        "education",
+        "skills"
+      ]
+    },
+    {
+      "id": "aws",
+      "lang": "en",
+      "question": "Do you have AWS knowledge or training?",
+      "rank": 1,
+      "retrieved": [
+        "education",
+        "skills",
+        "experience",
+        "education",
+        "skills",
+        "skills"
+      ],
+      "expected": [
+        "education",
+        "skills"
+      ]
+    },
+    {
+      "id": "mobile",
+      "lang": "pt",
+      "question": "Você já desenvolveu aplicativos mobile?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "experience",
+        "skills",
+        "profile",
+        "experience",
+        "experience"
+      ],
+      "expected": [
+        "experience",
+        "skills"
+      ]
+    },
+    {
+      "id": "mobile",
+      "lang": "en",
+      "question": "Have you developed mobile apps?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "experience",
+        "experience",
+        "skills",
+        "experience",
+        "project-devbrief"
+      ],
+      "expected": [
+        "experience",
+        "skills"
+      ]
+    },
+    {
+      "id": "sismetro-results",
+      "lang": "pt",
+      "question": "Quais resultados você obteve na SISMETRO?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "project-insurance-quote-agent",
+        "project-tiago-ai-twin",
+        "experience",
+        "education",
+        "experience"
+      ],
+      "expected": [
+        "experience"
+      ]
+    },
+    {
+      "id": "sismetro-results",
+      "lang": "en",
+      "question": "What results did you achieve at SISMETRO?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "project-tiago-ai-twin",
+        "experience",
+        "experience",
+        "education",
+        "experience"
+      ],
+      "expected": [
+        "experience"
+      ]
+    },
+    {
+      "id": "ecommerce",
+      "lang": "pt",
+      "question": "Qual é a sua experiência com e-commerce e marketplaces?",
+      "rank": 1,
+      "retrieved": [
+        "profile",
+        "skills",
+        "experience",
+        "project-nuvartis",
+        "experience",
+        "faq"
+      ],
+      "expected": [
+        "experience",
+        "profile",
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "ecommerce",
+      "lang": "en",
+      "question": "What is your experience with e-commerce and marketplaces?",
+      "rank": 2,
+      "retrieved": [
+        "skills",
+        "profile",
+        "experience",
+        "project-nuvartis",
+        "experience",
+        "profile"
+      ],
+      "expected": [
+        "experience",
+        "profile",
+        "project-nuvartis"
+      ]
+    },
+    {
+      "id": "availability",
+      "lang": "pt",
+      "question": "Você está disponível para novas oportunidades?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "faq",
+        "project-devbrief",
+        "profile",
+        "experience",
+        "faq"
+      ],
+      "expected": [
+        "faq"
+      ]
+    },
+    {
+      "id": "availability",
+      "lang": "en",
+      "question": "Are you available for new opportunities?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "profile",
+        "project-devbrief",
+        "experience",
+        "faq",
+        "experience"
+      ],
+      "expected": [
+        "faq"
+      ]
+    },
+    {
+      "id": "remote-timezone",
+      "lang": "pt",
+      "question": "Você trabalha remoto? Qual é o seu fuso horário?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "profile",
+        "experience",
+        "experience",
+        "experience",
+        "profile"
+      ],
+      "expected": [
+        "faq",
+        "profile"
+      ]
+    },
+    {
+      "id": "remote-timezone",
+      "lang": "en",
+      "question": "Do you work remotely? What is your time zone?",
+      "rank": 1,
+      "retrieved": [
+        "faq",
+        "experience",
+        "experience",
+        "profile",
+        "experience",
+        "experience"
+      ],
+      "expected": [
+        "faq",
+        "profile"
+      ]
+    },
+    {
+      "id": "frontend",
+      "lang": "pt",
+      "question": "Quais frameworks de frontend você usa?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "project-tiago-ai-twin",
+        "skills",
+        "project-insurance-quote-agent",
+        "profile",
+        "skills"
+      ],
+      "expected": [
+        "skills",
+        "experience"
+      ]
+    },
+    {
+      "id": "frontend",
+      "lang": "en",
+      "question": "Which frontend frameworks do you use?",
+      "rank": 1,
+      "retrieved": [
+        "experience",
+        "profile",
+        "project-tiago-ai-twin",
+        "skills",
+        "skills",
+        "project-investment-management"
+      ],
+      "expected": [
+        "skills",
+        "experience"
+      ]
+    },
+    {
+      "id": "this-assistant",
+      "lang": "pt",
+      "question": "Como este assistente foi construído?",
+      "rank": 1,
+      "retrieved": [
+        "project-tiago-ai-twin",
+        "experience",
+        "project-tiago-ai-twin",
+        "faq",
+        "project-tiago-ai-twin",
+        "faq"
+      ],
+      "expected": [
+        "project-tiago-ai-twin"
+      ]
+    },
+    {
+      "id": "this-assistant",
+      "lang": "en",
+      "question": "How was this assistant built?",
+      "rank": 1,
+      "retrieved": [
+        "project-tiago-ai-twin",
+        "project-devbrief",
+        "project-devbrief",
+        "faq",
+        "experience",
+        "project-tiago-ai-twin"
+      ],
+      "expected": [
+        "project-tiago-ai-twin"
+      ]
+    }
+  ]
+}

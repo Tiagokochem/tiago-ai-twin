@@ -5,9 +5,12 @@ from twin.agent.state import HandoffReason, Intent, Lang
 
 class Analysis(BaseModel):
     intent: Intent
+    handoff_reason: HandoffReason = Field(
+        description="salary, offer, scheduling, personal or explicit_request when "
+        "intent is handoff; none for every other intent"
+    )
     lang: Lang
     search_query: str = Field(description="standalone keyword search query")
-    handoff_reason: HandoffReason = "none"
 
 
 class Grade(BaseModel):

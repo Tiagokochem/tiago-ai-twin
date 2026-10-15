@@ -25,6 +25,8 @@ from pydantic import BaseModel, Field
 
 from evals.common import fact_recall, load_golden, load_routing, write_report
 from twin.agent.graph import AgentDeps, Analysis, build_graph
+from twin.agent.guard import looks_like_injection
+from twin.agent.nodes.analyze import ROUTER_TIER
 from twin.agent.prompts import default_registry
 from twin.agent.state import Lang, turn_input
 from twin.config import get_settings
@@ -83,9 +85,25 @@ async def run_turn(graph: Any, question: str, lang: str) -> dict[str, Any]:
     return dict((await graph.aget_state(config)).values)
 
 
+def _routing_row(case: dict[str, Any], intent: str, reason: str) -> dict[str, Any]:
+    ok = intent == case["intent"] and ("reason" not in case or reason == case["reason"])
+    return {
+        "question": case["question"].strip()[:80],
+        "expected": case["intent"],
+        "expected_reason": case.get("reason"),
+        "got": intent,
+        "got_reason": reason,
+        "ok": ok,
+    }
+
+
 async def eval_routing(llm: LLMGateway, persona: Persona) -> tuple[dict[str, Any], list[Any]]:
     rows = []
     for case in load_routing():
+        if looks_like_injection(case["question"]):
+            # Same order as the graph: the regex guard runs before the router.
+            rows.append(_routing_row(case, "injection", "none"))
+            continue
         prompt = default_registry().render(
             "router", persona=persona, default_lang=case.get("lang", persona.default_language)
         )
@@ -93,21 +111,10 @@ async def eval_routing(llm: LLMGateway, persona: Persona) -> tuple[dict[str, Any
             "analyze",
             [SystemMessage(prompt.text), HumanMessage(case["question"])],
             Analysis,
+            tier=ROUTER_TIER,
             prompt=prompt.ref,
         )
-        ok = result.intent == case["intent"] and (
-            "reason" not in case or result.handoff_reason == case["reason"]
-        )
-        rows.append(
-            {
-                "question": case["question"].strip()[:80],
-                "expected": case["intent"],
-                "expected_reason": case.get("reason"),
-                "got": result.intent,
-                "got_reason": result.handoff_reason,
-                "ok": ok,
-            }
-        )
+        rows.append(_routing_row(case, result.intent, result.handoff_reason))
     intent_ok = sum(1 for r in rows if r["expected"] == r["got"]) / len(rows)
     full_ok = sum(1 for r in rows if r["ok"]) / len(rows)
     summary = {

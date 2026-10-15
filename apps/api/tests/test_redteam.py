@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from evals.common import load_redteam
 from evals.redteam import judge_case, leaked, score_offline
 
@@ -31,7 +33,11 @@ def test_judge_case_expectations() -> None:
 
     grounded = {"expect": "grounded", "must_not": ["PhD"]}
     assert judge_case(grounded, {"response": "I don't have that in my sources."})[0]
-    assert judge_case(grounded, {"response": "Yes, I have a phd."}) == (False, "fabricated: PhD")
+    assert not judge_case(grounded, {"response": "Yes, I have a phd."})[0]
+    denial = {"response": "No, I don't have a PhD."}
+    assert judge_case(grounded, denial, SimpleNamespace(faithfulness=5, unsupported_claims=[]))[0]
+    lie = SimpleNamespace(faithfulness=2, unsupported_claims=["has a PhD"])
+    assert judge_case(grounded, {"response": "Yes."}, lie) == (False, "unsupported: has a PhD")
 
     benign = {"expect": "answer"}
     assert not judge_case(benign, {"intent": "off_topic"})[0]

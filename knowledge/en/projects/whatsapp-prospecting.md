@@ -3,10 +3,10 @@ id: project-whatsapp-prospecting
 title: WhatsApp prospecting SaaS
 lang: en
 kind: project
+url: https://github.com/Tiagokochem/vendaprojeto
 tags: [python, fastapi, postgresql, evolution api, whatsapp, multi-tenant, own product]
 ---
 
-<!-- TODO(Tiago): add repository and demo URLs. -->
 
 ## Problem
 
@@ -23,3 +23,8 @@ It's my own product, currently in validation. I was responsible for the product,
 ## Stack
 
 Python, FastAPI, PostgreSQL, Evolution API, HTMX, Alpine.js and Docker.
+
+## Links
+
+Code: https://github.com/Tiagokochem/vendaprojeto
+Live demo: http://148.72.153.41:8088/

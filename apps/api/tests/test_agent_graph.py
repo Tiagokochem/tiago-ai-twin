@@ -47,6 +47,7 @@ async def run_turn(
 
 
 def analysis(intent: str, **kw: Any) -> Analysis:
+    kw.setdefault("handoff_reason", "none")
     return Analysis(intent=intent, lang=kw.pop("lang", "en"), search_query="q", **kw)  # type: ignore[arg-type]
 
 

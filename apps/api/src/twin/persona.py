@@ -69,6 +69,7 @@ class Persona(BaseModel):
     default_language: Lang
     tone: Localized
     handoff_topics: list[str]
+    known_names: list[str] = []
     starter_questions: LocalizedList
     messages: Messages
     owner_whatsapp: str | None = None

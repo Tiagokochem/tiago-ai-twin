@@ -16,6 +16,8 @@ _INJECTION_PATTERNS = [
     r"(mostre|revele|repita|imprima) (o |seu |o seu )?(prompt|instrucoes)( do sistema)?",
     r"prompt do sistema",
     r"(transcreva|repita|copie) (tudo|todo o texto) (o )?que (veio|foi dito|voce recebeu) antes",
+    r"(texto|mensagens?|instrucoes) que (voce )?recebeu antes",
+    r"(repeat|copy) (word for word|verbatim) (the|everything)",
     r"(voce agora e|a partir de agora voce e|finja que voce e)",
 ]
 _COMPILED = [re.compile(p) for p in _INJECTION_PATTERNS]

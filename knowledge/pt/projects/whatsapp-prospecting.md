@@ -3,10 +3,10 @@ id: project-whatsapp-prospecting
 title: SaaS de prospecção no WhatsApp
 lang: pt
 kind: project
+url: https://github.com/Tiagokochem/vendaprojeto
 tags: [python, fastapi, postgresql, evolution api, whatsapp, multi-tenant, produto próprio]
 ---
 
-<!-- TODO(Tiago): adicionar url do repositório e da demo ("Testar online" / "Ver código"). -->
 
 ## Problema
 
@@ -23,3 +23,8 @@ Uma operação pronta: o usuário escolhe o nicho, configura a oferta e conecta 
 ## Stack
 
 Python, FastAPI, PostgreSQL, Evolution API, HTMX, Alpine.js e Docker.
+
+## Links
+
+Código: https://github.com/Tiagokochem/vendaprojeto
+Demonstração online: http://148.72.153.41:8088/

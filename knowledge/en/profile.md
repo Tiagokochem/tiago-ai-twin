@@ -25,4 +25,4 @@ I combine business experience (8+ years running my own e-commerce and selling on
 
 ## Location and contact
 
-I live in Marechal Cândido Rondon, Paraná, Brazil (UTC-3) and work remotely. Contact: tiagok989@gmail.com, LinkedIn, GitHub and https://tiagokochemsite.vercel.app/.
+I live in Marechal Cândido Rondon, Paraná, Brazil (UTC-3) and work remotely. Contact: e-mail tiagok989@gmail.com, LinkedIn https://www.linkedin.com/in/tiagokochem, GitHub https://github.com/Tiagokochem and the website https://tiagokochemsite.vercel.app/.

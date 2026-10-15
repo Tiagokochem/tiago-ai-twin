@@ -47,7 +47,7 @@ def router(messages: Any) -> Analysis:
     question = str(messages[-1].content).lower()
     if "salary" in question:
         return Analysis(intent="handoff", lang="en", search_query="", handoff_reason="salary")
-    return Analysis(intent="about_tiago", lang="en", search_query=question)
+    return Analysis(intent="about_tiago", handoff_reason="none", lang="en", search_query=question)
 
 
 @pytest.fixture

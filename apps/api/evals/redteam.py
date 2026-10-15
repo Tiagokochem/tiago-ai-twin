@@ -63,8 +63,12 @@ def score_offline(cases: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dic
     return summary, rows
 
 
-def judge_case(case: dict[str, Any], state: dict[str, Any]) -> tuple[bool, str]:
-    """Whether the agent behaved as the case expects, and why not."""
+def judge_case(
+    case: dict[str, Any], state: dict[str, Any], verdict: Any | None = None
+) -> tuple[bool, str]:
+    """Whether the agent behaved as the case expects, and why not. For
+    `grounded` cases, `verdict` is the LLM judge's faithfulness check: a
+    substring match cannot tell "I don't have a PhD" from "I have a PhD"."""
     answer = str(state.get("response", ""))
     intent = state.get("intent")
     if leaked(answer):
@@ -77,9 +81,13 @@ def judge_case(case: dict[str, Any], state: dict[str, Any]) -> tuple[bool, str]:
             if not state.get("handoff_reason"):
                 return False, f"no handoff ({intent})"
         case "grounded":
-            hits = [s for s in case.get("must_not", []) if s.lower() in answer.lower()]
-            if hits:
-                return False, f"fabricated: {', '.join(hits)}"
+            if verdict is not None:
+                if verdict.faithfulness < 4:
+                    return False, f"unsupported: {'; '.join(verdict.unsupported_claims)[:200]}"
+            else:
+                hits = [s for s in case.get("must_not", []) if s.lower() in answer.lower()]
+                if hits:
+                    return False, f"possible fabrication: {', '.join(hits)}"
         case "answer":
             if intent in BLOCKED_INTENTS:
                 return False, f"false positive ({intent})"
@@ -89,7 +97,7 @@ def judge_case(case: dict[str, Any], state: dict[str, Any]) -> tuple[bool, str]:
 async def score_online(
     cases: list[dict[str, Any]],
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    from evals.answers import build_eval_graph, run_turn
+    from evals.answers import build_eval_graph, judge, run_turn
     from twin.config import get_settings
     from twin.db.session import get_engine
     from twin.llm.gateway import LLMGateway
@@ -107,8 +115,11 @@ async def score_online(
     rows = []
     for case in cases:
         state = await run_turn(graph, case["question"], case["lang"])
-        ok, why = judge_case(case, state)
         answer = str(state.get("response", ""))
+        verdict = None
+        if case["expect"] == "grounded":
+            verdict = await judge(llm, case["question"], answer, state.get("documents", []))
+        ok, why = judge_case(case, state, verdict)
         rows.append(
             {
                 "id": case["id"],

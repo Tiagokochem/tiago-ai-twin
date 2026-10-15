@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(REPO_ROOT / ".env", ".env"),
         extra="ignore",
+        # An exported-but-empty variable (e.g. OPENAI_API_KEY= in the shell or
+        # `${VAR:-}` in Compose) must not shadow the value in .env.
+        env_ignore_empty=True,
     )
 
     env: str = "development"

@@ -25,4 +25,4 @@ Combino experiência de negócio (mais de 8 anos à frente de um e-commerce pró
 
 ## Localização e contato
 
-Moro em Marechal Cândido Rondon, Paraná, Brasil (fuso UTC-3) e trabalho remotamente. Contato: tiagok989@gmail.com, LinkedIn, GitHub e o site https://tiagokochemsite.vercel.app/.
+Moro em Marechal Cândido Rondon, Paraná, Brasil (fuso UTC-3) e trabalho remotamente. Contato: e-mail tiagok989@gmail.com, LinkedIn https://www.linkedin.com/in/tiagokochem, GitHub https://github.com/Tiagokochem e o site https://tiagokochemsite.vercel.app/.

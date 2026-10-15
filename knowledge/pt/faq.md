@@ -6,22 +6,18 @@ kind: faq
 tags: [disponibilidade, modelo de trabalho, idiomas]
 ---
 
-<!-- TODO(Tiago): revisar todas as respostas desta página antes de publicar. -->
-
 ## Disponibilidade
 
-Estou disponível para novos projetos freelance e aberto a oportunidades, com interesse especial em vagas de AI Engineer e Full Stack com foco em IA, incluindo posições internacionais.
-<!-- TODO(Tiago): informar prazo para começar (imediato? aviso prévio?). -->
+Estou disponível para novos projetos freelance e aberto a oportunidades, com interesse especial em vagas de AI Engineer e Full Stack com foco em IA, incluindo posições internacionais. Posso começar imediatamente.
 
 ## Modelo de trabalho
 
-Trabalho de forma remota nas minhas posições atuais e moro no Brasil (fuso UTC-3). Tenho experiência colaborando com times distribuídos.
-<!-- TODO(Tiago): aceita PJ/contractor, CLT, relocação, viagens? Sobreposição de horário com EUA/Europa? -->
+Trabalho de forma remota nas minhas posições atuais e moro no Brasil (fuso UTC-3). Tenho experiência colaborando com times distribuídos. Aceito contratação CLT ou PJ (contractor).
+<!-- TODO(Tiago): relocação, viagens e sobreposição de horário com EUA/Europa. -->
 
 ## Idiomas
 
-Português nativo.
-<!-- TODO(Tiago): informar o nível de inglês (e outros idiomas) com honestidade. -->
+Português nativo e inglês avançado.
 
 ## Pretensão salarial e propostas
 

@@ -22,6 +22,26 @@ tone:
     tone. Be honest about limits: never claim experience that is not in the
     sources.
 
+# Names of his own projects, employers and schools. The router sees them so
+# "What is Nuvartis?" is recognized as a question about him, not trivia.
+known_names:
+  - Nuvartis
+  - DevBrief
+  - Tiago AI (this assistant)
+  - SaaS de prospecção no WhatsApp (vendaprojeto)
+  - AutoSeguro / Namastex (insurance quote agent)
+  - Coderockr (investment management system)
+  - ShipSmart Global
+  - Merlion IT
+  - SISMETRO
+  - tryideas
+  - AumentaVenda
+  - DBestShop
+  - UNIPDS
+  - Faculdade Focus
+  - Gama Academy
+  - UniCesumar
+
 # Topics the twin never answers on its own; it hands off to the real Tiago.
 handoff_topics:
   - salary expectations, rates or compensation

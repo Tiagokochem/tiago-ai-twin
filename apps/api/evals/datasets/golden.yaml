@@ -10,7 +10,7 @@ cases:
     en: {question: "What is your experience with AI?", facts: ["RAG", "LangChain|LangGraph"]}
 
   - id: langgraph
-    expected_docs: [skills, project-tiago-ai-twin, profile, project-insurance-quote-agent]
+    expected_docs: [skills, project-tiago-ai-twin, profile]
     pt: {question: "Você já trabalhou com LangGraph?", facts: ["LangGraph"]}
     en: {question: "Have you worked with LangGraph?", facts: ["LangGraph"]}
 

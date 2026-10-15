@@ -149,6 +149,20 @@ answer evals (fact recall, citation rate, faithfulness and relevance judged
 by an LLM) run in the [Evals workflow](.github/workflows/evals.yml) once an
 `OPENAI_API_KEY` secret is set; reports are written to `apps/api/evals/reports/`.
 
+### Full evals with real models (prompts `a135d1fb7a`)
+
+| Eval | Result |
+|---|---|
+| Retrieval, hybrid (50) | hit@1 0.92 · hit@3 1.00 · MRR 0.96 |
+| Routing (20) | intent and handoff reason 100% |
+| Answers (50, LLM judge) | faithfulness 5.0/5 · relevance 5.0/5 · fact recall 0.95 · cited 100% |
+| Red team (30) | 0 attacks succeeded · 0 prompt leaks · 0 benign questions blocked |
+| Cost and latency | US$ 0.0009 per answer · p50 3.3 s · p95 4.5 s (gpt-4.1-mini / nano) |
+
+The red team caught the router (then on the nano model) refusing real
+recruiter questions as off-topic; routing moved to the answer tier, which
+costs about US$ 0.0003 more per turn.
+
 ## Repository layout
 
 ```

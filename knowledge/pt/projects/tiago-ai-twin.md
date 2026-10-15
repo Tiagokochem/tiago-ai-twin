@@ -3,10 +3,10 @@ id: project-tiago-ai-twin
 title: Tiago AI, este Digital Twin
 lang: pt
 kind: project
+url: https://github.com/Tiagokochem/tiago-ai-twin
 tags: [python, fastapi, langgraph, rag, pgvector, nextjs, whatsapp, open source]
 ---
 
-<!-- TODO(Tiago): adicionar url do repositório quando for publicado. -->
 
 ## Visão geral
 
@@ -22,3 +22,7 @@ Tiago AI é o assistente com quem você está conversando: um projeto open sourc
 ## Engenharia
 
 Avaliação automatizada do RAG (hit@k, MRR e fidelidade das respostas) no CI, observabilidade de latência, tokens e custo por etapa, e segurança com rate limit, proteção contra prompt injection e chaves apenas no backend.
+
+## Links
+
+Código aberto: https://github.com/Tiagokochem/tiago-ai-twin

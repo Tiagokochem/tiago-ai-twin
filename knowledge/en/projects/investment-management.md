@@ -3,10 +3,10 @@ id: project-investment-management
 title: Investment management with Laravel 13 and Vue
 lang: en
 kind: project
+url: https://github.com/Tiagokochem/coderockr-fullstack-test
 tags: [laravel, php, vue, inertia, postgresql, idempotency, technical challenge]
 ---
 
-<!-- TODO(Tiago): add repository URL. -->
 
 ## Problem
 
@@ -23,3 +23,7 @@ End-to-end development for a technical challenge: back-end, front-end, Docker, t
 ## Stack
 
 Laravel 13, PHP 8.4, Vue 3, Inertia.js, PostgreSQL, PHPUnit and GitHub Actions.
+
+## Links
+
+Code: https://github.com/Tiagokochem/coderockr-fullstack-test

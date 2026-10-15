@@ -6,22 +6,18 @@ kind: faq
 tags: [availability, work model, languages]
 ---
 
-<!-- TODO(Tiago): review every answer on this page before publishing. -->
-
 ## Availability
 
-I'm available for new freelance projects and open to opportunities, especially AI Engineer and AI-focused Full Stack roles, including international positions.
-<!-- TODO(Tiago): add start date (immediate? notice period?). -->
+I'm available for new freelance projects and open to opportunities, especially AI Engineer and AI-focused Full Stack roles, including international positions. I can start immediately.
 
 ## Work model
 
-I work remotely in my current positions and live in Brazil (UTC-3). I have experience collaborating with distributed teams.
-<!-- TODO(Tiago): contractor/employee, relocation, travel? Working-hour overlap with US/Europe? -->
+I work remotely in my current positions and live in Brazil (UTC-3). I have experience collaborating with distributed teams. I accept both employment (CLT in Brazil) and contractor (PJ) arrangements.
+<!-- TODO(Tiago): relocation, travel and working-hour overlap with US/Europe. -->
 
 ## Languages
 
-Native Portuguese.
-<!-- TODO(Tiago): state English level (and other languages) honestly. -->
+Native Portuguese and advanced English.
 
 ## Salary expectations and offers
 
