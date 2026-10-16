@@ -10,9 +10,14 @@ cases:
     en: {question: "What is your experience with AI?", facts: ["RAG", "LangChain|LangGraph"]}
 
   - id: langgraph
-    expected_docs: [skills, project-tiago-ai-twin, profile, project-other-projects]
+    expected_docs: [skills, project-tiago-ai-twin, profile, project-other-projects, project-langchain-langgraph]
     pt: {question: "Você já trabalhou com LangGraph?", facts: ["LangGraph"]}
     en: {question: "Have you worked with LangGraph?", facts: ["LangGraph"]}
+
+  - id: langchain-projects
+    expected_docs: [project-langchain-langgraph, project-tiago-ai-twin, project-other-projects]
+    pt: {question: "Quais projetos você usou LangChain?", facts: ["LangGraph|LangChain", "Tiago AI|medical-appointment|autonomous-langchain"]}
+    en: {question: "Which projects did you use LangChain on?", facts: ["LangGraph|LangChain", "Tiago AI|medical-appointment|autonomous-langchain"]}
 
   - id: rag-systems
     expected_docs: [experience, skills, project-tiago-ai-twin, profile, faq]

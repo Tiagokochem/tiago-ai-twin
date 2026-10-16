@@ -4,12 +4,12 @@ title: Other projects and studies on GitHub
 lang: en
 kind: project
 url: https://github.com/Tiagokochem
-tags: [github, portfolio, ai agents, langgraph, mcp, laravel, integrations, technical challenges, studies]
+tags: [github, portfolio, ai agents, langchain, langgraph, mcp, laravel, integrations, technical challenges, studies]
 ---
 
 ## Overview
 
-Besides my main projects, I keep smaller projects, technical challenges and studies on GitHub (https://github.com/Tiagokochem). These are the most relevant ones, grouped by theme, with what each one actually does.
+Besides my main projects, I keep smaller projects, technical challenges and studies on GitHub (https://github.com/Tiagokochem). These are the most relevant ones, grouped by theme, with what each one actually does. Public LangChain / LangGraph projects in this list: medical-appointment-langgraph and autonomous-langchain-mcp-filesystem (LangChain.js). Tiago AI (this assistant) also uses LangGraph and is documented separately.
 
 ## Agents and AI applications
 

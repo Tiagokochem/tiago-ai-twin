@@ -3,7 +3,7 @@ id: experience
 title: Experiência profissional
 lang: pt
 kind: experience
-tags: [carreira, laravel, vue, ia]
+tags: [carreira, laravel, vue, ia, langchain, langgraph]
 ---
 
 ## Full Stack Developer na ShipSmart Global (jun/2025 até hoje, remoto)
@@ -12,7 +12,7 @@ Desenvolvo e escalo aplicações web com Laravel (PHP) e Vue.js. Refatoro sistem
 
 ## AI Full Stack Developer, freelance e consultoria (jul/2025 até hoje, remoto)
 
-Desenvolvo aplicações de IA generativa com Python, Node.js, LangChain, APIs da OpenAI, agentes de IA e RAG. Projeto soluções de busca semântica com embeddings e bancos vetoriais. Integro LLMs com CRMs e automações n8n para reduzir processos manuais.
+Desenvolvo aplicações de IA generativa com Python, Node.js, LangChain, LangGraph (ecossistema LangChain), APIs da OpenAI, agentes de IA e RAG. Projeto soluções de busca semântica com embeddings e bancos vetoriais. Integro LLMs com CRMs e automações n8n para reduzir processos manuais. Parte desse trabalho é em projetos de clientes (código privado). Os projetos públicos com LangChain/LangGraph estão no GitHub: Tiago AI (LangGraph), medical-appointment-langgraph e autonomous-langchain-mcp-filesystem.
 
 ## Full Stack Software Engineer na Merlion IT (ago/2024 a jun/2025, remoto)
 

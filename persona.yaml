@@ -28,6 +28,9 @@ known_names:
   - Nuvartis
   - DevBrief
   - Tiago AI (this assistant)
+  - LangChain / LangGraph
+  - medical-appointment-langgraph
+  - autonomous-langchain-mcp-filesystem
   - SaaS de prospecção no WhatsApp (vendaprojeto)
   - AutoSeguro / Namastex (insurance quote agent)
   - Coderockr (investment management system)
